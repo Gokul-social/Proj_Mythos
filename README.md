@@ -1,320 +1,375 @@
 <div align="center">
 
-#  Lendora AI
+# ◎ MYTHOS
 
-### Privacy-First DeFi Lending Protocol Powered by AI Agents
+### AI-Native Agentic Lending Protocol on Solana
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF.svg)](https://solana.com/)
+[![Anchor](https://img.shields.io/badge/Anchor-0.30-blue.svg)](https://anchor-lang.com/)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org/)
-[![Ethereum](https://img.shields.io/badge/Ethereum-L2-purple.svg)](https://ethereum.org/)
+[![Built for Solana Hackathon 2026](https://img.shields.io/badge/Solana%20Hackathon-2026-9945FF)](https://colosseum.org/)
 
 <p align="center">
-  <strong>AI-powered loan negotiations • Zero-knowledge credit scoring • Immersive 3D dashboard</strong>
+  <strong>Two AI agents. One loan. Fully on-chain.</strong><br/>
+  Lenny & Luna negotiate your interest rate autonomously, pay each other in USDC via x402, and settle on Solana Devnet — no humans required.
 </p>
 
-[Quick Start](#-quick-start) •
-[Features](#-features) •
+[Live Demo](#-quick-start) •
 [Architecture](#-architecture) •
-[Documentation](#-documentation) •
-[Deployment](#-deployment)
+[Tech Stack](#-tech-stack) •
+[API Docs](#-api-reference)
 
 </div>
 
 ---
 
-##  Overview
+## 🚀 What is Mythos?
 
-Lendora AI is a decentralized lending protocol that revolutionizes DeFi lending through:
+**Mythos** is an AI-native, agentic DeFi lending protocol built natively on Solana. It eliminates the human negotiation bottleneck in DeFi lending by deploying two autonomous AI agents:
 
-- **AI Agent Negotiation**: Autonomous agents (Lenny the Borrower, Luna the Lender) negotiate optimal loan terms using Llama 3
-- **Zero-Knowledge Credit Scoring**: Verify creditworthiness without revealing sensitive financial data using Circom/SnarkJS
-- **Ethereum L2 Settlement**: Fast, low-cost transactions on Arbitrum/Optimism
-- **Immersive Dashboard**: Beautiful 3D interface built with React Three Fiber
+- 🤖 **Lenny** — the borrower agent. Reads your on-chain credit attestation (SAS), checks collateral prices via Jupiter, pays x402 micropayments to access AI services, and fights for the lowest possible interest rate.
+- 🌙 **Luna** — the lender agent. Prices risk based on SAS credit tiers, evaluates counter-offers, and co-signs the final Anchor transaction.
 
-##  Features
+Every AI service call between agents is governed by **x402** — the HTTP 402 payment protocol. Agents autonomously pay each other in USDC on Solana. No human clicks required.
 
-| Feature | Description |
-|---------|-------------|
-|  **AI Agents** | CrewAI-powered agents negotiate loan terms autonomously |
-|  **ZK Proofs** | Privacy-preserving credit checks via Circom circuits |
-|  **Layer 2** | Ethereum L2 (Arbitrum) for fast, cheap settlements |
-|  **3D Dashboard** | Immersive React Three Fiber interface |
-|  **Real-time Updates** | WebSocket-powered live negotiation tracking |
-|  **Analytics** | Interactive charts and portfolio tracking |
-|  **Dark/Light Mode** | Beautiful themes with glassmorphism design |
+### Why This Wins the Hackathon
+
+| Hackathon Theme | Mythos Implementation |
+|---|---|
+| **Agentic Commerce** | Lenny & Luna are autonomous CrewAI agents that negotiate, pay, and settle — zero human intervention |
+| **x402 Payments** | Every `/api/agent/*` endpoint requires a USDC micropayment in the `X-PAYMENT` header |
+| **Identity & Stablecoins** | Solana Attestation Service (SAS) for on-chain credit identity, USDC for all payments |
+| **Solana Performance** | Anchor programs on Devnet, Helius RPC, Jupiter price feeds, <1s settlement |
+
+---
 
 ## 🏗 Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND (React + Vite)                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ 3D Dashboard│  │ Wallet      │  │ Real-time WebSocket     │  │
-│  │ (R3F/Drei)  │  │ Connection  │  │ Updates                 │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└───────────────────────────┬─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite + Framer Motion)          │
+│  ┌──────────────┐  ┌─────────────────────┐  ┌───────────────────┐  │
+│  │ Phantom/     │  │ Agent Negotiation   │  │ x402 Payment      │  │
+│  │ Solflare     │  │ Live Feed (Lenny×   │  │ Visualizer        │  │
+│  │ Wallet       │  │ Luna dialogue)      │  │ (USDC micropays)  │  │
+│  └──────────────┘  └─────────────────────┘  └───────────────────┘  │
+│                        Helius WebSocket Live Ticker                 │
+└───────────────────────────┬─────────────────────────────────────────┘
                             │ REST API / WebSocket
-┌───────────────────────────▼─────────────────────────────────────┐
-│                      BACKEND (FastAPI)                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ AI Agents   │  │ ZK Proofs   │  │ Ethereum TX Builder     │  │
-│  │ (CrewAI)    │  │ (Circom)    │  │ (Web3.py)               │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└───────────────────────────┬─────────────────────────────────────┘
+┌───────────────────────────▼─────────────────────────────────────────┐
+│                   BACKEND (FastAPI + x402 Middleware)               │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────────┐ │
+│  │ Lenny Agent  │  │ Luna Agent   │  │ x402 Payment Gate         │ │
+│  │ (CrewAI)     │  │ (CrewAI)     │  │ /api/agent/* → 402 →      │ │
+│  │ SAS + Jup    │  │ Risk Pricing │  │ X-PAYMENT header verify   │ │
+│  └──────────────┘  └──────────────┘  └───────────────────────────┘ │
+│  ┌──────────────┐  ┌──────────────┐                                 │
+│  │ SAS Client   │  │ Helius RPC   │                                 │
+│  │ (Attestation)│  │ (Webhooks)   │                                 │
+│  └──────────────┘  └──────────────┘                                 │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │ Anchor CPI
+┌───────────────────────────▼─────────────────────────────────────────┐
+│                   SOLANA DEVNET (Anchor Programs)                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────────┐ │
+│  │ LoanAccount  │  │ Collateral   │  │ Solana Attestation        │ │
+│  │ PDA          │  │ Vault (SPL)  │  │ Service (SAS) PDAs        │ │
+│  └──────────────┘  └──────────────┘  └───────────────────────────┘ │
+│                    Program: MythosLend1111...                        │
+└─────────────────────────────────────────────────────────────────────┘
                             │
-┌───────────────────────────▼─────────────────────────────────────┐
-│                    SMART CONTRACTS (Solidity)                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ LoanManager │  │ Collateral  │  │ CreditScoreVerifier     │  │
-│  │             │  │ Vault       │  │ (ZK Verifier)           │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-│                      Arbitrum / Optimism L2                     │
-└─────────────────────────────────────────────────────────────────┘
+              ┌─────────────▼─────────────┐
+              │  Jupiter Price API        │
+              │  SOL/USDC/BONK real-time  │
+              └───────────────────────────┘
 ```
 
-##  Quick Start
+### How a Loan Works
+
+```
+1. User connects Phantom wallet
+2. Lenny reads SAS credit attestation (on-chain PDA)
+3. Lenny calls /api/agent/evaluate [requires X-PAYMENT: 0.001 USDC via x402]
+4. Luna prices the risk based on SAS tier + Jupiter collateral value
+5. Lenny counter-offers [requires X-PAYMENT: 0.0005 USDC via x402]
+6. Luna accepts/counters (2-3 rounds, ~5 seconds total)
+7. Lenny broadcasts Anchor instruction: initialize_loan()
+8. Collateral locked in SPL token vault PDA
+9. USDC disbursed to borrower wallet
+10. Helius webhook fires → dashboard updates in real-time
+```
+
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- A free [Helius API key](https://helius.dev) (optional — demo mode works without it)
+- A free [Groq API key](https://console.groq.com) (optional — simulation mode works without it)
 
-- **Node.js** 18+ and npm
-- **Python** 3.10+
-- **Docker** (optional, for containerized deployment)
-
-### Option 1: Docker (Recommended)
+### 1. Clone & Configure
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/Lendora-AI.git
-cd Lendora-AI
+git clone https://github.com/MUTHUKUMARAN-K-1/Proj_Mythos.git
+cd Proj_Mythos
 
-# Copy environment file
-cp env.example .env
-
-# Start all services
-docker-compose up -d
-
-# Access the application
-# Frontend: http://localhost:80
-# Backend:  http://localhost:8000
-# API Docs: http://localhost:8000/docs
+# Copy environment config
+cp .env.example .env
+# Edit .env and add your HELIUS_API_KEY and GROQ_API_KEY
 ```
 
-### Option 2: Manual Setup
-
-#### Backend
+### 2. Start the Backend
 
 ```bash
-# Install Python dependencies
 pip install -r requirements.txt
-pip install -r backend/api/requirements.txt
-
-# Start the FastAPI server
 cd backend/api
 uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### Frontend
+API docs available at: **http://localhost:8000/docs**
+
+### 3. Start the Frontend
 
 ```bash
-# Navigate to frontend
 cd frontend/Dashboard
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-**Access Points:**
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-- WebSocket: ws://localhost:8000/ws
+Open: **http://localhost:5173**
 
-## 🔧 Configuration
+### 4. Try the Demo
 
-### Environment Variables
+1. Click **"Connect Wallet"** (Phantom, Solflare, or Demo mode)
+2. Set loan amount, term, collateral token
+3. Click **"Start AI Negotiation"**
+4. Watch Lenny & Luna negotiate live — with x402 micropayments flowing in real-time
 
-Create a `.env` file in the project root:
+---
 
-```env
-# Frontend (Vercel)
-VITE_API_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
+## 💸 x402 Payment Protocol
 
-# Backend (Railway)
-PORT=8000
-HOST=0.0.0.0
-OLLAMA_BASE_URL=http://localhost:11434
-
-# Ethereum
-ETHEREUM_NETWORK=arbitrum-sepolia
-ETHEREUM_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
-```
-
-See [`env.example`](./env.example) for all available options.
-
-##  Project Structure
+Mythos is one of the first DeFi protocols to implement **x402** — the HTTP 402 Payment Required standard for machine-to-machine payments.
 
 ```
-Lendora-AI/
-├── agents/                     # AI Agents (CrewAI)
-│   ├── borrower_agent.py       # Lenny - Borrower AI
-│   ├── lender_agent.py         # Luna - Lender AI
-│   └── multi_agent_negotiation.py
-├── backend/
-│   ├── api/
-│   │   └── server.py           # FastAPI backend
-│   ├── ethereum/               # Ethereum transaction builder
-│   ├── oracles/                # Chainlink oracle integration
-│   └── zk/                     # ZK proof generator
-├── contracts/
-│   └── core/                   # Solidity smart contracts
-│       ├── LoanManager.sol
-│       ├── CollateralVault.sol
-│       ├── InterestRateModel.sol
-│       ├── LiquidationEngine.sol
-│       └── zk/
-│           └── circuits/       # Circom ZK circuits
-├── frontend/
-│   └── Dashboard/              # React + Vite frontend
-│       └── src/
-│           ├── components/     # UI components
-│           │   ├── 3d/         # Three.js components
-│           │   ├── dashboard/  # Dashboard widgets
-│           │   └── ui/         # shadcn/ui components
-│           ├── pages/          # Route pages
-│           ├── hooks/          # Custom React hooks
-│           └── lib/            # Utilities & API clients
-├── docs/                       # Documentation
-├── docker-compose.yml          # Docker configuration
-└── README.md
+Agent (Lenny)                    Mythos API                    Solana
+     │                               │                            │
+     │  POST /api/agent/evaluate     │                            │
+     │──────────────────────────────>│                            │
+     │                               │                            │
+     │  HTTP 402 Payment Required    │                            │
+     │  X-PAYMENT-REQUIRED: base64({ │                            │
+     │    scheme: "exact",           │                            │
+     │    asset: USDC_DEVNET_MINT,   │                            │
+     │    amount: 1000,  // 0.001 USDC│                           │
+     │    payTo: TREASURY_WALLET     │                            │
+     │  })                           │                            │
+     │<──────────────────────────────│                            │
+     │                               │                            │
+     │  [Lenny pays 0.001 USDC]      │──── SPL Transfer ────────>│
+     │                               │                            │
+     │  POST /api/agent/evaluate     │                            │
+     │  X-PAYMENT: base64({sig})     │                            │
+     │──────────────────────────────>│                            │
+     │                               │  getTransaction(sig)       │
+     │                               │──────────────────────────>│
+     │                               │  ✅ Verified               │
+     │                               │<──────────────────────────│
+     │  200 OK: AI evaluation result │                            │
+     │<──────────────────────────────│                            │
 ```
 
-##  API Reference
+### Protected Endpoints
 
-### REST Endpoints
+| Endpoint | Price | Purpose |
+|---|---|---|
+| `POST /api/agent/evaluate` | 0.001 USDC | AI loan evaluation |
+| `POST /api/agent/negotiate` | 0.0005 USDC | Counter-offer submission |
+| `POST /api/agent/attest` | 0.002 USDC | Credit attestation request |
+
+---
+
+## 🪪 Solana Attestation Service (SAS)
+
+Instead of ZK proofs (complex, expensive), Mythos uses **SAS** — Solana's native on-chain attestation system — for credit scoring.
+
+```python
+# SAS Credit Tiers
+CREDIT_TIERS = {
+    "AAA": {"rate_bps": 700, "max_loan": 100_000},  # Exceptional
+    "AA":  {"rate_bps": 800, "max_loan": 75_000},   # Very Good
+    "A":   {"rate_bps": 950, "max_loan": 50_000},   # Good
+    "B":   {"rate_bps": 1100, "max_loan": 25_000},  # Fair
+    "C":   {"rate_bps": 1300, "max_loan": 10_000},  # Limited
+}
+```
+
+Each attestation is a **PDA** (Program Derived Address) on Solana that stores the borrower's credit tier, max loan amount, and LTV ratio — verifiable by any program without revealing raw financial data.
+
+---
+
+## 🔧 API Reference
+
+### Solana-Native Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/api/dashboard/stats` | Dashboard statistics |
-| `POST` | `/api/zk/credit-check` | Submit ZK credit verification |
-| `POST` | `/api/workflow/start` | Start loan negotiation workflow |
-| `POST` | `/api/negotiation/propose` | Propose interest rate |
-| `POST` | `/api/negotiation/accept` | Accept loan terms |
-| `GET` | `/api/agent/status` | AI agent status |
-| `GET` | `/api/conversation/{id}` | Get negotiation conversation |
+|---|---|---|
+| `POST` | `/api/solana/attest` | Issue SAS credit attestation |
+| `GET` | `/api/solana/attest/{pubkey}` | Verify existing attestation |
+| `GET` | `/api/solana/price/{symbol}` | Jupiter real-time price (SOL/USDC/BONK) |
+| `GET` | `/api/solana/network` | Helius network stats |
+| `GET` | `/api/solana/x402/stats` | x402 payment gate statistics |
+| `POST` | `/api/solana/workflow/start` | Start full AI lending workflow |
+
+### x402-Gated Agent Endpoints
+
+| Method | Endpoint | Price | Description |
+|---|---|---|---|
+| `POST` | `/api/agent/evaluate` | 0.001 USDC | AI loan evaluation (SAS + Jupiter) |
+| `POST` | `/api/agent/negotiate` | 0.0005 USDC | Submit counter-offer to Luna |
 
 ### WebSocket Events
 
 ```javascript
-// Connect to WebSocket
 const ws = new WebSocket('ws://localhost:8000/ws');
-
-// Events received:
-// - connected: Connection established
-// - stats_update: Dashboard stats updated
-// - agent_status: AI agent status change
-// - workflow_step: Workflow progress update
-// - workflow_complete: Negotiation complete
-// - conversation_update: New conversation message
+// Events:
+// attestation_issued    — New SAS attestation on-chain
+// negotiation_round     — Lenny/Luna counter-offer exchange
+// agent_evaluation      — x402-verified AI evaluation complete
+// workflow_complete     — Loan settled on Solana
+// workflow_step         — Any workflow state change
 ```
 
-##  Deployment
-
-### Recommended Setup
-
-| Service | Platform | Purpose |
-|---------|----------|---------|
-| Frontend | Vercel | Static React app |
-| Backend | Railway | FastAPI + AI agents |
-| Contracts | Arbitrum | Smart contracts |
-
-### Deploy to Vercel + Railway
-
-```bash
-# Deploy frontend to Vercel
-cd frontend/Dashboard
-vercel
-
-# Deploy backend to Railway
-railway login
-railway init
-railway up
-```
-
-See [`DEPLOY.md`](./DEPLOY.md) for detailed deployment instructions.
+---
 
 ## 🛠 Tech Stack
 
-### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build**: Vite 7
-- **3D Graphics**: React Three Fiber + Drei
-- **Animation**: Framer Motion
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State**: TanStack Query
+### Smart Contracts
+- **Framework**: Anchor (Rust)
+- **Network**: Solana Devnet
+- **Program**: `programs/mythos/src/lib.rs`
+- **Instructions**: `initialize_loan`, `accept_loan`, `repay_loan`, `liquidate`
+- **Accounts**: `LoanAccount` PDA, `CollateralVault` SPL token vault
 
 ### Backend
-- **Framework**: FastAPI
-- **AI Agents**: CrewAI + Llama 3 (via Ollama)
-- **WebSocket**: FastAPI native
-- **ZK Proofs**: Circom + SnarkJS
+- **Framework**: FastAPI (Python)
+- **AI Agents**: CrewAI + Groq (Llama 3.3 70B)
+- **Payment Gate**: x402 HTTP 402 middleware (custom)
+- **RPC**: Helius Enhanced API + Webhooks
+- **Prices**: Jupiter Price API v6
+- **Credit**: Solana Attestation Service (SAS)
 
-### Blockchain
-- **Network**: Ethereum L2 (Arbitrum/Optimism)
-- **Contracts**: Solidity + Hardhat
-- **Oracles**: Chainlink
-- **ZK Circuits**: Circom
+### Frontend
+- **Framework**: React 18 + TypeScript + Vite
+- **Wallet**: Phantom / Solflare (+ demo mode fallback)
+- **Animation**: Framer Motion
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Real-time**: Helius WebSocket live ticker
 
-##  Documentation
+---
 
-| Document | Description |
-|----------|-------------|
-| [`START_HERE.md`](./START_HERE.md) | Getting started guide |
-| [`QUICKSTART.md`](./QUICKSTART.md) | Quick reference |
-| [`DEPLOY.md`](./DEPLOY.md) | Deployment guide |
-| [`docs/ETHEREUM_MIGRATION.md`](./docs/ETHEREUM_MIGRATION.md) | Ethereum architecture |
-| [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) | Advanced deployment |
-| [`contracts/README.md`](./contracts/README.md) | Smart contract docs |
+## 📁 Project Structure
 
-##  Security
+```
+Proj_Mythos/
+├── programs/
+│   └── mythos/
+│       ├── Cargo.toml              # Anchor dependencies
+│       └── src/lib.rs              # Anchor smart contract (498 lines)
+│           ├── initialize_loan()   # Lock collateral, open loan request
+│           ├── accept_loan()       # Luna accepts, disburses USDC
+│           ├── repay_loan()        # Repay principal + interest, release collateral
+│           └── liquidate()         # Seize collateral if overdue
+├── agents/
+│   ├── solana_borrower_agent.py   # Lenny (CrewAI) — x402 + SAS + Jupiter + Anchor
+│   └── solana_lender_agent.py     # Luna (CrewAI) — risk pricing + health monitoring
+├── backend/api/
+│   ├── server.py                  # FastAPI app (Mythos v3.0.0)
+│   ├── x402_middleware.py         # HTTP 402 payment gate (real x402 spec)
+│   ├── attestation.py             # SAS client — issue/verify credit attestations
+│   └── helius_client.py           # Helius RPC + webhook + event streaming
+└── frontend/Dashboard/src/
+    ├── lib/solana.ts               # Solana utilities (fetch-based, no SDK dep)
+    ├── components/
+    │   ├── wallet/SolanaWalletProvider.tsx  # Phantom + Solflare + demo mode
+    │   ├── AgentNegotiationFeed.tsx          # Live Lenny×Luna dialogue
+    │   └── X402PaymentVisualizer.tsx         # Animated micropayment flows
+    └── pages/MythosPage.tsx        # Main hackathon demo page
+```
 
-- **ZK Proofs**: Credit scores verified without revealing actual values
-- **Non-custodial**: Users maintain control of their keys
-- **Access Control**: Role-based permissions in smart contracts
-- **Oracle Security**: Chainlink decentralized price feeds
+---
 
-##  Contributing
+## 🌐 Deployment
 
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+| Service | Platform |
+|---|---|
+| Frontend | Vercel / Netlify |
+| Backend | Railway / Render |
+| Smart Contract | Solana Devnet (Anchor deploy) |
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+# Deploy Anchor program to Devnet
+anchor build
+anchor deploy --provider.cluster devnet
 
-##  License
+# Deploy backend
+railway up
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+# Deploy frontend
+vercel --prod
+```
 
-## 🙏 Acknowledgments
+---
 
-- [CrewAI](https://crewai.com/) - AI agent framework
-- [Circom](https://docs.circom.io/) - ZK circuit compiler
-- [shadcn/ui](https://ui.shadcn.com/) - UI components
-- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) - 3D graphics
+## 🔑 Environment Variables
+
+```env
+# Solana
+SOLANA_NETWORK=devnet
+HELIUS_API_KEY=your_key_from_helius.dev
+MYTHOS_PROGRAM_ID=<from: anchor deploy>
+
+# AI Agents
+GROQ_API_KEY=your_key_from_console.groq.com
+
+# Protocol
+TREASURY_WALLET=<your Solana wallet address>
+USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+
+# Frontend
+VITE_API_URL=http://localhost:8000
+VITE_SOLANA_NETWORK=devnet
+VITE_HELIUS_API_KEY=your_helius_key
+```
+
+See [`.env.example`](.env.example) for all options.
+
+---
+
+## 🏆 Hackathon Alignment
+
+**Solana Hackathon 2026 — Track: Agentic Commerce, Identity, Payments & Stablecoins**
+
+| Criterion | Score | Evidence |
+|---|---|---|
+| Solana scalability | ✅ | Anchor/Devnet, Helius RPC, <1s settlement |
+| Composability | ✅ | SAS + Jupiter + x402 + Anchor in one flow |
+| Agentic commerce | ✅ | Agents pay each other (M2M) via x402 without any human action |
+| Identity | ✅ | SAS on-chain credit attestation PDAs |
+| Stablecoins | ✅ | USDC for x402 payments AND loan disbursement |
+| Innovation | ✅ | First agentic lending protocol with x402 payment gates |
+| Technical skill | ✅ | Rust Anchor + CrewAI + FastAPI + React full-stack |
+| Real-world impact | ✅ | Eliminates human negotiation in DeFi lending |
 
 ---
 
 <div align="center">
 
-**[⬆ Back to Top](#-lendora-ai)**
+Built with ◎ for the Solana Hackathon 2026
 
-Made with ❤️ by the Lendora Team
+**[⬆ Back to Top](#-mythos)**
 
 </div>

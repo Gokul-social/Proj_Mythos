@@ -396,19 +396,17 @@ export default function MythosPage() {
     clearMessages();
     setX402Payments([]);
 
-    // Trigger backend workflow
+    // Trigger backend workflow (Solana-native route)
     try {
-      await fetch(`${API_URL}/api/workflow/start`, {
+      await fetch(`${API_URL}/api/solana/workflow/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           borrower_address: wallet.publicKey,
-          lender_address: 'LunaLenderAgentXXXXXXXXXXXXXXXXXXXXXXXXX',
           credit_score: 720,
           principal: loanParams.amount,
           interest_rate: 9.5,
           term_months: loanParams.termMonths,
-          stablecoin: 'USDC',
         }),
       });
     } catch {
