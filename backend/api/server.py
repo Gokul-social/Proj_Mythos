@@ -1,4 +1,4 @@
-﻿
+
 # =============================================================================
 # DEMO MODE NOTICE
 # When SOLANA_DEMO_MODE=true (default), x402 payment confirmation and Solana
@@ -929,24 +929,26 @@ async def close_hydra_and_settle_mock() -> Dict:
 
 @app.get("/")
 async def root():
-    return {"message": "Lendora AI API", "version": "2.0.0"}
+    return {
+        "message": "Mythos — AI-Native Agentic Lending on Solana",
+        "version": "1.0.0",
+        "program_id": "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 
 @app.get("/health")
 async def health():
-    hydra_status = "disconnected"
-    hydra_mode = "none"
-    
-    if hasattr(app.state, 'hydra_manager') and app.state.hydra_manager:
-        hydra_mode = "direct" if not app.state.hydra_manager.client._connected else "hydra"
-        hydra_status = "connected" if app.state.hydra_manager.client._connected else "disconnected"
-    
     return {
-        "status": "healthy",
+        "status": "ok",
+        "service": "Mythos — AI-Native Agentic Lending on Solana",
         "timestamp": datetime.now().isoformat(),
-        "hydra": {
-            "status": hydra_status,
-            "mode": hydra_mode
-        }
+        "network": os.getenv("SOLANA_NETWORK", "devnet"),
+        "program_id": os.getenv("MYTHOS_PROGRAM_ID", "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"),
+        "demo_mode": os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true",
+        "agents": {"lenny": "ready", "luna": "ready"},
+        "explorer": "https://explorer.solana.com/address/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet"
     }
 
 
