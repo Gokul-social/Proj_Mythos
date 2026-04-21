@@ -151,7 +151,7 @@ export function validateLoanFormData(data: Partial<LoanFormData>): {
   }
   
   // Validate stablecoin
-  const validStablecoins: Stablecoin[] = ['USDT', 'USDC', 'DAI', 'USDD', 'TUSD', 'BUSD'];
+  const validStablecoins: Stablecoin[] = ['USDT', 'USDC', 'PYUSD'];
   if (!data.stablecoin || !validStablecoins.includes(data.stablecoin.toUpperCase() as Stablecoin)) {
     errors.push('Invalid stablecoin');
   } else {

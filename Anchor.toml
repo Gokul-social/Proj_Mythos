@@ -3,17 +3,17 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [programs.localnet]
-mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "devnet"
-wallet = "C:/Users/Lenovo/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

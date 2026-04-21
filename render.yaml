@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: lendora-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend/api && python -m uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+      - key: SOLANA_NETWORK
+        value: devnet
+      - key: SOLANA_DEMO_MODE
+        value: "true"
+      - key: HELIUS_RPC_URL
+        sync: false
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: CREDIT_ORACLE_URL
+        sync: false
+      - key: CREDIT_ORACLE_API_KEY
+        sync: false
