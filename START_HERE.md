@@ -1,4 +1,4 @@
-# Mythos — Start Here
+# Mythos - Start Here
 
 > **AI-native agentic lending on Solana.**
 > Two AI agents (Lenny the borrower, Luna the lender) negotiate your loan rate in real-time,
@@ -6,15 +6,24 @@
 
 ## What's Already Done
 
-- ✅ Anchor program deployed to Devnet: `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM`
-- ✅ Frontend (Vite + React + Solana wallet adapter)
-- ✅ Backend (FastAPI + Groq LLM + Helius RPC + Jupiter price feed)
+- Anchor program deployed to Devnet: `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM`
+- Frontend (Vite + React + Solana wallet adapter)
+- Backend (FastAPI + Groq LLM + Helius RPC + Jupiter price feed)
 
 You **do not need to rebuild or redeploy** the Anchor program unless modifying `programs/mythos/src/lib.rs`.
 
 ---
 
 ## Local Setup (6 steps)
+
+```mermaid
+graph LR
+    A[Clone Repo] --> B[Setup Backend .env]
+    B --> C[Start Backend]
+    C --> D[Setup Frontend .env]
+    D --> E[Start Frontend]
+    E --> F[Open Browser]
+```
 
 ### Prerequisites
 
@@ -25,14 +34,14 @@ You **do not need to rebuild or redeploy** the Anchor program unless modifying `
 
 ---
 
-### Step 1 — Clone
+### Step 1 - Clone
 
 ```bash
 git clone https://github.com/MUTHUKUMARAN-K-1/Proj_Mythos
 cd Proj_Mythos
 ```
 
-### Step 2 — Backend environment
+### Step 2 - Backend environment
 
 ```bash
 cp .env.example .env
@@ -46,16 +55,16 @@ GROQ_API_KEY=your_key_here
 
 Everything else can stay as-is for a devnet demo.
 
-### Step 3 — Start backend
+### Step 3 - Start backend
 
 ```bash
 pip install -r requirements.txt
 uvicorn backend.api.server:app --host 0.0.0.0 --port 8000
 ```
 
-Verify: `curl http://localhost:8000/health` → `{"status":"ok","network":"devnet"}`
+Verify: `curl http://localhost:8000/health` -> `{"status":"ok","network":"devnet"}`
 
-### Step 4 — Frontend environment
+### Step 4 - Frontend environment
 
 ```bash
 cp frontend/Dashboard/.env.example frontend/Dashboard/.env
@@ -63,7 +72,7 @@ cp frontend/Dashboard/.env.example frontend/Dashboard/.env
 
 Edit `frontend/Dashboard/.env` and add your `VITE_HELIUS_API_KEY`.
 
-### Step 5 — Start frontend
+### Step 5 - Start frontend
 
 ```bash
 cd frontend/Dashboard
@@ -71,11 +80,11 @@ npm install
 npm run dev
 ```
 
-### Step 6 — Open the app
+### Step 6 - Open the app
 
 Go to `http://localhost:5173`
 
-- **No wallet needed** for the demo — click **"⚡ Try Demo"**
+- **No wallet needed** for the demo - click **"Try Demo"**
 - Connect **Phantom** (Devnet mode) to sign real Anchor transactions
 
 ---
@@ -85,7 +94,7 @@ Go to `http://localhost:5173`
 Only required if you modify `programs/mythos/src/lib.rs`.
 
 ```bash
-# On Windows with Solana tools in D:\DevTools\:
+# On Windows with Solana tools:
 $env:CARGO_TARGET_DIR = "D:\DevTools\cargo-target"
 cargo-build-sbf --manifest-path programs/mythos/Cargo.toml
 

@@ -1,4 +1,4 @@
-# Mythos — Deployment Guide
+# Mythos - Deployment Guide
 
 ## Stack
 
@@ -8,9 +8,25 @@
 | Backend | Railway | FastAPI + Groq + Helius |
 | Anchor Program | Solana Devnet | Already deployed |
 
+```mermaid
+sequenceDiagram
+    participant D as Developer
+    participant G as GitHub
+    participant V as Vercel (Frontend)
+    participant R as Railway (Backend)
+    participant S as Solana (Devnet)
+
+    D->>G: Push code
+    G-->>V: Trigger Build (frontend/Dashboard)
+    V->>V: Build & Deploy
+    G-->>R: Trigger Deploy
+    R->>R: Start FastAPI server
+    D->>S: anchor test / deploy (if modified)
+```
+
 ---
 
-## Frontend → Vercel
+## Frontend -> Vercel
 
 ```bash
 cd frontend/Dashboard
@@ -32,13 +48,13 @@ Then push to GitHub and connect the repo to Vercel:
    VITE_MYTHOS_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
    VITE_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
    ```
-7. Deploy → get your Vercel URL
+7. Deploy -> get your Vercel URL
 
 ---
 
-## Backend → Railway
+## Backend -> Railway
 
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+1. Go to [railway.app](https://railway.app) -> New Project -> Deploy from GitHub
 2. Select `Proj_Mythos` repo
 3. **Start command**: `uvicorn backend.api.server:app --host 0.0.0.0 --port $PORT`
 4. Set environment variables:
@@ -51,7 +67,7 @@ Then push to GitHub and connect the repo to Vercel:
    SOLANA_DEMO_MODE=true
    PORT=8000
    ```
-5. Deploy → get your Railway URL
+5. Deploy -> get your Railway URL
 6. Paste Railway URL into Vercel `VITE_API_URL`
 
 ---
@@ -61,11 +77,11 @@ Then push to GitHub and connect the repo to Vercel:
 ```bash
 # Backend
 curl https://your-railway-url.up.railway.app/health
-# → {"status":"ok","network":"devnet","program":"FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"}
+# -> {"status":"ok","network":"devnet","program":"FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"}
 
 # Price feed
 curl https://your-railway-url.up.railway.app/api/solana/price/SOL
-# → {"price": 145.23, "source": "jupiter"}
+# -> {"price": 145.23, "source": "jupiter"}
 ```
 
 ---

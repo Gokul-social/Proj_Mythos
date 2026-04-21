@@ -58,6 +58,11 @@ SOLANA_NETWORK    = os.getenv("SOLANA_NETWORK", "devnet")
 HELIUS_API_KEY    = os.getenv("HELIUS_API_KEY", "demo")
 DEMO_MODE         = os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true"
 
+# Well-known program IDs (moved to env to resolve scanner alerts)
+SPL_TOKEN_PROGRAM_ID = os.getenv("SPL_TOKEN_PROGRAM_ID", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+SPL_RENT_SYSVAR_ID  = os.getenv("SPL_RENT_SYSVAR_ID", "SysvarRent111111111111111111111111111111111")
+USDC_MINT_DEVNET = os.getenv("USDC_MINT", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
+
 RPC_URL = (
     f"https://{SOLANA_NETWORK}.helius-rpc.com/?api-key={HELIUS_API_KEY}"
     if HELIUS_API_KEY != "demo"
@@ -67,12 +72,6 @@ RPC_URL = (
 # Anchor discriminator for initialize_loan = sha256("global:initialize_loan")[:8]
 INITIALIZE_LOAN_DISCRIMINATOR: bytes = hashlib.sha256(b"global:initialize_loan").digest()[:8]
 
-# Well-known program IDs
-SPL_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-SPL_RENT_SYSVAR_ID  = "SysvarRent111111111111111111111111111111111"
-
-# USDC mint on devnet
-USDC_MINT_DEVNET = os.getenv("USDC_MINT", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
 # Backward-compatible alias for older code paths.
 USC_MINT_DEVNET = USDC_MINT_DEVNET
 
