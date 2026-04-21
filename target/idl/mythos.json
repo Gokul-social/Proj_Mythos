@@ -1,0 +1,204 @@
+{
+  "version": "0.1.0",
+  "name": "mythos",
+  "instructions": [
+    {
+      "name": "initializeProtocol",
+      "accounts": [
+        { "name": "admin", "isMut": true, "isSigner": true },
+        { "name": "protocolState", "isMut": true, "isSigner": false },
+        { "name": "treasury", "isMut": false, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "minCollateralRatioBps", "type": "u16" },
+        { "name": "liquidationThresholdBps", "type": "u16" }
+      ]
+    },
+    {
+      "name": "initializeLoan",
+      "accounts": [
+        { "name": "borrower", "isMut": true, "isSigner": true },
+        { "name": "loanAccount", "isMut": true, "isSigner": false },
+        { "name": "collateralVault", "isMut": true, "isSigner": false },
+        { "name": "protocolState", "isMut": true, "isSigner": false },
+        { "name": "collateralMint", "isMut": false, "isSigner": false },
+        { "name": "stablecoinMint", "isMut": false, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false },
+        { "name": "systemProgram", "isMut": false, "isSigner": false },
+        { "name": "rent", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "loanId", "type": "u64" },
+        { "name": "principal", "type": "u64" },
+        { "name": "interestRateBps", "type": "u16" },
+        { "name": "termSeconds", "type": "u64" }
+      ]
+    },
+    {
+      "name": "depositCollateral",
+      "accounts": [
+        { "name": "borrower", "isMut": true, "isSigner": true },
+        { "name": "loanAccount", "isMut": true, "isSigner": false },
+        { "name": "borrowerCollateralAta", "isMut": true, "isSigner": false },
+        { "name": "collateralVault", "isMut": true, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "amount", "type": "u64" }
+      ]
+    },
+    {
+      "name": "fundLoan",
+      "accounts": [
+        { "name": "lender", "isMut": true, "isSigner": true },
+        { "name": "loanAccount", "isMut": true, "isSigner": false },
+        { "name": "protocolState", "isMut": false, "isSigner": false },
+        { "name": "lenderStablecoinAta", "isMut": true, "isSigner": false },
+        { "name": "borrowerStablecoinAta", "isMut": true, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "repayLoan",
+      "accounts": [
+        { "name": "borrower", "isMut": true, "isSigner": true },
+        { "name": "loanAccount", "isMut": true, "isSigner": false },
+        { "name": "borrowerStablecoinAta", "isMut": true, "isSigner": false },
+        { "name": "lenderStablecoinAta", "isMut": true, "isSigner": false },
+        { "name": "collateralVault", "isMut": true, "isSigner": false },
+        { "name": "borrowerCollateralAta", "isMut": true, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "liquidateLoan",
+      "accounts": [
+        { "name": "liquidator", "isMut": true, "isSigner": true },
+        { "name": "loanAccount", "isMut": true, "isSigner": false },
+        { "name": "protocolState", "isMut": false, "isSigner": false },
+        { "name": "collateralVault", "isMut": true, "isSigner": false },
+        { "name": "liquidatorCollateralAta", "isMut": true, "isSigner": false },
+        { "name": "tokenProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProtocolState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "admin", "type": "publicKey" },
+          { "name": "treasury", "type": "publicKey" },
+          { "name": "minCollateralRatioBps", "type": "u16" },
+          { "name": "liquidationThresholdBps", "type": "u16" },
+          { "name": "loanCount", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "LoanAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "borrower", "type": "publicKey" },
+          { "name": "lender", "type": "publicKey" },
+          { "name": "principal", "type": "u64" },
+          { "name": "interestRateBps", "type": "u16" },
+          { "name": "termSeconds", "type": "u64" },
+          { "name": "startTime", "type": "u64" },
+          { "name": "collateralMint", "type": "publicKey" },
+          { "name": "collateralAmount", "type": "u64" },
+          { "name": "stablecoinMint", "type": "publicKey" },
+          { "name": "amountRepaid", "type": "u64" },
+          { "name": "status", "type": { "defined": "LoanStatus" } },
+          { "name": "bump", "type": "u8" },
+          { "name": "loanId", "type": "u64" }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "LoanStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Requested" },
+          { "name": "Active" },
+          { "name": "Repaid" },
+          { "name": "Liquidated" }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "LoanInitialized",
+      "fields": [
+        { "name": "loanId", "type": "u64", "index": true },
+        { "name": "borrower", "type": "publicKey", "index": false },
+        { "name": "principal", "type": "u64", "index": false },
+        { "name": "interestRateBps", "type": "u16", "index": false },
+        { "name": "stablecoinMint", "type": "publicKey", "index": false },
+        { "name": "collateralMint", "type": "publicKey", "index": false }
+      ]
+    },
+    {
+      "name": "LoanFunded",
+      "fields": [
+        { "name": "loanId", "type": "u64", "index": true },
+        { "name": "lender", "type": "publicKey", "index": false },
+        { "name": "amount", "type": "u64", "index": false }
+      ]
+    },
+    {
+      "name": "CollateralDeposited",
+      "fields": [
+        { "name": "loanId", "type": "u64", "index": true },
+        { "name": "amount", "type": "u64", "index": false },
+        { "name": "totalCollateral", "type": "u64", "index": false }
+      ]
+    },
+    {
+      "name": "LoanRepaid",
+      "fields": [
+        { "name": "loanId", "type": "u64", "index": true },
+        { "name": "amountRepaid", "type": "u64", "index": false },
+        { "name": "interestPaid", "type": "u64", "index": false },
+        { "name": "collateralReturned", "type": "u64", "index": false }
+      ]
+    },
+    {
+      "name": "LoanLiquidated",
+      "fields": [
+        { "name": "loanId", "type": "u64", "index": true },
+        { "name": "liquidator", "type": "publicKey", "index": false },
+        { "name": "collateralSeized", "type": "u64", "index": false }
+      ]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "InvalidPrincipal", "msg": "Loan principal must be greater than zero" },
+    { "code": 6001, "name": "InvalidInterestRate", "msg": "Interest rate must be between 1 and 5000 basis points" },
+    { "code": 6002, "name": "InvalidTermLength", "msg": "Loan term must be between 1 second and 365 days" },
+    { "code": 6003, "name": "InvalidAmount", "msg": "Amount must be greater than zero" },
+    { "code": 6004, "name": "LoanNotActive", "msg": "Loan is not in Active status" },
+    { "code": 6005, "name": "LoanAlreadyFunded", "msg": "Loan has already been funded" },
+    { "code": 6006, "name": "InsufficientCollateral", "msg": "Insufficient collateral to meet minimum ratio" },
+    { "code": 6007, "name": "CollateralSufficient", "msg": "Collateral ratio is above liquidation threshold; cannot liquidate" },
+    { "code": 6008, "name": "Unauthorized", "msg": "Unauthorized: signer does not match expected account" },
+    { "code": 6009, "name": "MintMismatch", "msg": "Token mint does not match expected mint" },
+    { "code": 6010, "name": "InvalidCollateralRatio", "msg": "Collateral ratio must be at least 100% (10000 bps)" },
+    { "code": 6011, "name": "InvalidLiquidationThreshold", "msg": "Liquidation threshold must be >= 100% and < collateral ratio" },
+    { "code": 6012, "name": "Overflow", "msg": "Arithmetic overflow" }
+  ],
+  "metadata": {
+    "address": "MythoST111111111111111111111111111111111111"
+  }
+}

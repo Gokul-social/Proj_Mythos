@@ -8,3 +8,9 @@ python-dotenv>=1.0.0
 
 # Requests for API calls (Oracle, general HTTP)
 requests>=2.31.0
+
+# Solana on-chain integration
+solana>=0.36.0
+solders>=0.21.0
+anchorpy>=0.20.1
+spl-token>=0.1.0

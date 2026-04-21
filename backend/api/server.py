@@ -2012,6 +2012,308 @@ async def start_solana_workflow(req: dict, background_tasks: BackgroundTasks):
 
 
 # ============================================================================
+# On-Chain Solana Endpoints (Mythos Anchor Program)
+# ============================================================================
+
+# Import MythosClient
+MYTHOS_CLIENT = None
+SOLANA_DEMO_MODE = os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true"
+
+try:
+    from solana_client import MythosClient
+    if not SOLANA_DEMO_MODE:
+        MYTHOS_CLIENT = MythosClient.from_env()
+        print("[Solana][OK] MythosClient initialized for on-chain operations")
+    else:
+        print("[Solana] Running in demo mode — on-chain endpoints will return mock data")
+except ImportError as e:
+    print(f"[Solana] MythosClient not available: {e}")
+except Exception as e:
+    print(f"[Solana] MythosClient init failed: {e}")
+
+
+class InitializeLoanRequest(BaseModel):
+    loan_id: int
+    principal: int
+    interest_rate_bps: int
+    term_seconds: int
+    collateral_mint: str
+    stablecoin_mint: str
+
+
+class DepositCollateralRequest(BaseModel):
+    loan_id: int
+    amount: int
+    collateral_mint: str
+
+
+class FundLoanRequest(BaseModel):
+    borrower_address: str
+    loan_id: int
+    stablecoin_mint: str
+
+
+class RepayLoanRequest(BaseModel):
+    loan_id: int
+    stablecoin_mint: str
+    collateral_mint: str
+    lender_address: str
+
+
+class LiquidateLoanRequest(BaseModel):
+    borrower_address: str
+    loan_id: int
+    collateral_mint: str
+
+
+@app.post("/api/solana/initialize-loan")
+async def solana_initialize_loan(req: InitializeLoanRequest):
+    """Create a new loan on-chain via the Mythos Anchor program."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "success": True,
+            "tx_signature": f"DEMO_INIT_{req.loan_id}_{int(datetime.now().timestamp())}",
+            "loan_pda": f"DEMO_PDA_{req.loan_id}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        collateral_mint = Pubkey.from_string(req.collateral_mint)
+        stablecoin_mint = Pubkey.from_string(req.stablecoin_mint)
+
+        tx_sig = await MYTHOS_CLIENT.initialize_loan(
+            loan_id=req.loan_id,
+            principal=req.principal,
+            interest_rate_bps=req.interest_rate_bps,
+            term_seconds=req.term_seconds,
+            collateral_mint=collateral_mint,
+            stablecoin_mint=stablecoin_mint,
+        )
+
+        borrower = MYTHOS_CLIENT.payer.pubkey()
+        loan_pda, _ = MYTHOS_CLIENT.derive_loan_pda(borrower, req.loan_id)
+
+        await manager.broadcast({
+            "type": "solana_tx",
+            "data": {
+                "instruction": "initialize_loan",
+                "tx_signature": tx_sig,
+                "loan_pda": str(loan_pda),
+                "loan_id": req.loan_id,
+            }
+        })
+
+        return {
+            "success": True,
+            "tx_signature": tx_sig,
+            "loan_pda": str(loan_pda),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/solana/deposit-collateral")
+async def solana_deposit_collateral(req: DepositCollateralRequest):
+    """Deposit collateral into a loan's vault on-chain."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "success": True,
+            "tx_signature": f"DEMO_DEPOSIT_{req.loan_id}_{int(datetime.now().timestamp())}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        collateral_mint = Pubkey.from_string(req.collateral_mint)
+
+        tx_sig = await MYTHOS_CLIENT.deposit_collateral(
+            loan_id=req.loan_id,
+            amount=req.amount,
+            collateral_mint=collateral_mint,
+        )
+
+        await manager.broadcast({
+            "type": "solana_tx",
+            "data": {
+                "instruction": "deposit_collateral",
+                "tx_signature": tx_sig,
+                "loan_id": req.loan_id,
+                "amount": req.amount,
+            }
+        })
+
+        return {"success": True, "tx_signature": tx_sig}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/solana/fund-loan")
+async def solana_fund_loan(req: FundLoanRequest):
+    """Fund a loan on-chain (lender sends stablecoin to borrower)."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "success": True,
+            "tx_signature": f"DEMO_FUND_{req.loan_id}_{int(datetime.now().timestamp())}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        borrower = Pubkey.from_string(req.borrower_address)
+        stablecoin_mint = Pubkey.from_string(req.stablecoin_mint)
+
+        tx_sig = await MYTHOS_CLIENT.fund_loan(
+            borrower=borrower,
+            loan_id=req.loan_id,
+            stablecoin_mint=stablecoin_mint,
+        )
+
+        await manager.broadcast({
+            "type": "solana_tx",
+            "data": {
+                "instruction": "fund_loan",
+                "tx_signature": tx_sig,
+                "loan_id": req.loan_id,
+            }
+        })
+
+        return {"success": True, "tx_signature": tx_sig}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/solana/repay-loan")
+async def solana_repay_loan(req: RepayLoanRequest):
+    """Repay a loan on-chain."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "success": True,
+            "tx_signature": f"DEMO_REPAY_{req.loan_id}_{int(datetime.now().timestamp())}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        stablecoin_mint = Pubkey.from_string(req.stablecoin_mint)
+        collateral_mint = Pubkey.from_string(req.collateral_mint)
+        lender = Pubkey.from_string(req.lender_address)
+
+        tx_sig = await MYTHOS_CLIENT.repay_loan(
+            loan_id=req.loan_id,
+            stablecoin_mint=stablecoin_mint,
+            collateral_mint=collateral_mint,
+            lender=lender,
+        )
+
+        await manager.broadcast({
+            "type": "solana_tx",
+            "data": {
+                "instruction": "repay_loan",
+                "tx_signature": tx_sig,
+                "loan_id": req.loan_id,
+            }
+        })
+
+        return {"success": True, "tx_signature": tx_sig}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/solana/liquidate-loan")
+async def solana_liquidate_loan(req: LiquidateLoanRequest):
+    """Liquidate an undercollateralized loan on-chain."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "success": True,
+            "tx_signature": f"DEMO_LIQUIDATE_{req.loan_id}_{int(datetime.now().timestamp())}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        borrower = Pubkey.from_string(req.borrower_address)
+        collateral_mint = Pubkey.from_string(req.collateral_mint)
+
+        tx_sig = await MYTHOS_CLIENT.liquidate_loan(
+            borrower=borrower,
+            loan_id=req.loan_id,
+            collateral_mint=collateral_mint,
+        )
+
+        await manager.broadcast({
+            "type": "solana_tx",
+            "data": {
+                "instruction": "liquidate_loan",
+                "tx_signature": tx_sig,
+                "loan_id": req.loan_id,
+            }
+        })
+
+        return {"success": True, "tx_signature": tx_sig}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/solana/loan/{borrower_address}/{loan_id}")
+async def solana_get_loan(borrower_address: str, loan_id: int):
+    """Fetch loan state from on-chain."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "borrower": borrower_address,
+            "lender": "DemoLender111111111111111111111111111111111",
+            "principal": 1_000_000,
+            "interest_rate_bps": 750,
+            "term_seconds": 2592000,
+            "start_time": int(datetime.now().timestamp()),
+            "collateral_mint": "So11111111111111111111111111111111111111112",
+            "collateral_amount": 1_500_000,
+            "stablecoin_mint": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+            "amount_repaid": 0,
+            "status": "Active",
+            "loan_id": loan_id,
+            "loan_pda": f"DEMO_PDA_{loan_id}",
+            "demo": True,
+        }
+
+    try:
+        from solders.pubkey import Pubkey
+        borrower = Pubkey.from_string(borrower_address)
+        loan_data = await MYTHOS_CLIENT.fetch_loan(borrower, loan_id)
+        if loan_data is None:
+            raise HTTPException(status_code=404, detail="Loan not found")
+        return loan_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/solana/protocol")
+async def solana_get_protocol():
+    """Fetch protocol state from on-chain."""
+    if SOLANA_DEMO_MODE or not MYTHOS_CLIENT:
+        return {
+            "admin": "DemoAdmin111111111111111111111111111111111",
+            "treasury": "DemoTreasury11111111111111111111111111111",
+            "min_collateral_ratio_bps": 15000,
+            "liquidation_threshold_bps": 12000,
+            "loan_count": 0,
+            "demo": True,
+        }
+
+    try:
+        protocol_data = await MYTHOS_CLIENT.fetch_protocol()
+        if protocol_data is None:
+            raise HTTPException(status_code=404, detail="Protocol not initialized")
+        return protocol_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # Entry Point
 # ============================================================================
 
