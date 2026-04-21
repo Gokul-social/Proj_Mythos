@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Input Validation and Sanitization
  * Validates and sanitizes user inputs before submission
  */
@@ -21,7 +21,7 @@ export function sanitizeString(input: string): string {
 }
 
 /**
- * Validate Ethereum address format
+ * Validate wallet address format (Ethereum-compatible — kept as utility)
  */
 export function validateEthereumAddress(address: string): boolean {
   if (!address || typeof address !== 'string') {
@@ -200,3 +200,4 @@ export function validateLoanFormData(data: Partial<LoanFormData>): {
   
   return { valid: true, data: sanitized as LoanFormData, errors: [] };
 }
+

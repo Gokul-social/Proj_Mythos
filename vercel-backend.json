@@ -21,9 +21,9 @@
     }
   ],
   "env": {
-    "OLLAMA_BASE_URL": "@ollama_base_url",
-    "ETHEREUM_NETWORK": "@ethereum_network",
-    "ETHEREUM_RPC_URL": "@ethereum_rpc_url"
+    "SOLANA_NETWORK": "@solana_network",
+    "HELIUS_API_KEY": "@helius_api_key",
+    "MYTHOS_PROGRAM_ID": "@mythos_program_id",
+    "GROQ_API_KEY": "@groq_api_key"
   }
 }
-

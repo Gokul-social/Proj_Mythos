@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Simplified Wallet Connection for Wizard
  * Neutral, informational error messages
  */
@@ -91,7 +91,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                 }
             } else {
                 // Not connected, show message
-                setLocalError('No connection found. Please click MetaMask button to connect.');
+                setLocalError('No connection found. Please click the Phantom button to connect.');
             }
         } catch (err) {
             console.error('Check connection error:', err);
@@ -150,11 +150,11 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
     }, [isConnected, address, onConnect]);
 
     const walletIcons: Record<string, string> = {
-        metamask: '🦊',
-        coinbase: '🔵',
-        walletconnect: '🔗',
-        trust: '🛡️',
-        rainbow: '🌈',
+        phantom: '👻',
+        coinbase: 'ðŸ”µ',
+        walletconnect: 'ðŸ”—',
+        trust: 'ðŸ›¡ï¸',
+        rainbow: 'ðŸŒˆ',
     };
 
     return (
@@ -194,14 +194,14 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                                         disabled={isConnecting}
                                         className="justify-start"
                                     >
-                                        <span className="mr-2">{walletIcons[wallet.name] || '💳'}</span>
+                                        <span className="mr-2">{walletIcons[wallet.name] || 'ðŸ’³'}</span>
                                         {wallet.displayName}
                                     </Button>
                                 ))}
                         </div>
                         {installedWallets.filter(w => w.installed).length === 0 && (
                             <p className="text-sm text-muted-foreground mt-3">
-                                No wallets detected. Install MetaMask or another Ethereum wallet extension.
+                                No wallets detected. Install Phantom or another Solana wallet extension.
                             </p>
                         )}
                     </div>
@@ -256,10 +256,10 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                                     <div className="space-y-2">
                                         <p className="text-xs font-medium text-foreground">Steps to connect:</p>
                                         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside ml-2">
-                                            <li>Look for the MetaMask extension icon in your browser toolbar</li>
-                                            <li>Click the MetaMask icon to open the extension</li>
+                                            <li>Look for the Phantom extension icon in your browser toolbar</li>
+                                            <li>Click the Phantom icon to open the extension</li>
                                             <li>Approve the connection request if you see one</li>
-                                            <li>Make sure MetaMask is unlocked</li>
+                                            <li>Make sure Phantom is unlocked</li>
                                             <li>Click "Check Connection" below after approving</li>
                                         </ol>
                                     </div>
@@ -308,3 +308,5 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
         </div>
     );
 }
+
+

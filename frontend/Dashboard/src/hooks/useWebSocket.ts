@@ -135,16 +135,17 @@ export function useWebSocket() {
         fetchLatestConversation();
         break;
 
+      case 'network_status':
       case 'l2_status':
-      case 'hydra_status': // Keep backward compatibility
+      case 'hydra_status': // Backward-compat alias — backend now sends network_status
         setState(prev => ({
           ...prev,
           l2Status: {
-            mode: message.data.mode === 'hydra' ? 'l2' : message.data.mode,
+            mode: 'l2',  // Always Solana L1 — mode field kept for UI compat
             connected: message.data.connected,
-            network_state: message.data.head_state || message.data.network_state,
+            network_state: message.data.network_state || message.data.head_state || 'devnet',
             active_negotiations: message.data.active_negotiations,
-            current_session_id: message.data.current_head_id || message.data.current_session_id
+            current_session_id: message.data.current_session_id || message.data.current_head_id
           }
         }));
         break;
@@ -229,3 +230,4 @@ export function useWebSocket() {
     fetchLatestConversation
   };
 }
+

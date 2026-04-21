@@ -1,50 +1,48 @@
 """
-Lendora AI - Agents Module
-Privacy-First AI Agents for DeFi Lending on Ethereum
+Mythos — Agents Module
+AI-Native Agentic Lending on Solana
 
 Architecture:
-    Lender --> Loan Offer --> AI Agent (Lenny)
-                                  |
-                            Analyze with Llama 3
-                                  |
-                         Negotiate (Ethereum L2)
-                                  |
-                            Accept Terms
-                                  |
-                    Ethereum Settlement Tx
-                                  |
-                        Solidity Contract (verify)
-                                  |
-                            Loan Disbursed!
+    User Request → Lenny (Borrower Agent)
+                    |
+              [reads SAS]  ← Solana Attestation Service (on-chain credit)
+                    |
+              [pays x402]  ← HTTP 402 micropayment to Luna
+                    |
+              [negotiates] ← Luna (Lender Agent) — AI rate negotiation
+                    |
+              [signs Anchor tx] → Solana Devnet
+                    |
+                Loan Disbursed! 🎉
 
 Agents:
-- Borrower Agent ("Lenny"): Analyzes offers, negotiates, settles on Ethereum
-- Lender Agent ("Luna"): Creates offers, evaluates risk, signs settlements
+- solana_borrower_agent (Lenny): Reads SAS, pays x402, negotiates, settles on Solana
+- solana_lender_agent  (Luna):  Prices risk, evaluates counter-offers, confirms loan
 """
 
-from .borrower_agent import (
-    create_borrower_agent,
-    run_complete_workflow,
-    run_integrated_workflow,
-    LoanOffer,
-    HydraHeadManager,
-)
-from .lender_agent import (
-    create_lender_agent,
-    run_lender_agent,
-    handle_negotiation_request,
-    LendingPool,
-)
+# Legacy Ethereum agents have been moved to archive/legacy/
+# Active Solana agents live at the module level
+try:
+    from .solana_borrower_agent import (
+        run_solana_borrower_workflow,
+        create_solana_borrower_agent,
+        SolanaClient,
+        SolanaAttestation,
+        LoanOffer,
+        SolanaLoanResult,
+    )
+    _SOLANA_AGENTS_AVAILABLE = True
+except ImportError as e:
+    _SOLANA_AGENTS_AVAILABLE = False
+    import warnings
+    warnings.warn(f"[Mythos] Solana agents not loaded: {e}")
+
 __all__ = [
-    # Borrower Agent (Lenny)
-    "create_borrower_agent",
-    "run_complete_workflow",
-    "run_integrated_workflow",
+    # Borrower Agent — Lenny
+    "run_solana_borrower_workflow",
+    "create_solana_borrower_agent",
+    "SolanaClient",
+    "SolanaAttestation",
     "LoanOffer",
-    "HydraHeadManager",
-    # Lender Agent (Luna)
-    "create_lender_agent",
-    "run_lender_agent",
-    "handle_negotiation_request",
-    "LendingPool",
+    "SolanaLoanResult",
 ]

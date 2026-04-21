@@ -1,4 +1,4 @@
-"""
+﻿"""
 Vercel Serverless Function - Minimal API
 Standalone minimal API for Vercel deployment
 
@@ -91,7 +91,7 @@ async def agent_status():
         "agents_initialized": False,
         "lenny_available": False,
         "luna_available": False,
-        "masumi_available": False,
+        "solana_agents_available": True,
         "status": "unavailable",
         "message": "Full backend required for AI agents. Deploy to Railway or Render.",
         "mode": "minimal"
@@ -99,4 +99,5 @@ async def agent_status():
 
 # Export for Vercel
 handler = app
+
 

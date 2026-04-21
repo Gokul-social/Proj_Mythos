@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Lendora AI - Wallet Connection Hook
- * React hook for managing Ethereum wallet state
+ * React hook for managing Solana wallet state (Phantom/wallet-adapter)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -157,9 +157,9 @@ export function useWallet(): UseWalletReturn {
                     const savedWallet = localStorage.getItem(STORAGE_KEY);
                     if (!savedWallet) {
                         // Try to detect which wallet
-                        const ethereum = (window as Window & { ethereum?: { isMetaMask?: boolean } }).ethereum;
-                        if (ethereum?.isMetaMask) {
-                            localStorage.setItem(STORAGE_KEY, 'metamask');
+                        const solana = (window as Window & { solana?: { isPhantom?: boolean } }).solana;
+                        if (solana?.isPhantom) {
+                            localStorage.setItem(STORAGE_KEY, 'phantom');
                         }
                     }
                     // DO NOT clear disconnect flag here - only clear it when user explicitly connects
@@ -239,3 +239,5 @@ export function useWallet(): UseWalletReturn {
         refreshBalance,
     };
 }
+
+

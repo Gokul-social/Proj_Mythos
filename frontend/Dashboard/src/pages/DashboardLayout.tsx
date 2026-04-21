@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lendora AI - Create Loan Wizard
  * Simple 3-step wizard focused on loan creation
  */
@@ -243,7 +243,7 @@ export default function DashboardLayout() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h2 className="text-xl font-semibold mb-1 text-foreground">Connect Wallet</h2>
-                                    <p className="text-sm text-muted-foreground">Connect your Ethereum wallet to continue</p>
+                                    <p className="text-sm text-muted-foreground">Connect your Solana wallet (Phantom) to continue</p>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -291,3 +291,4 @@ export default function DashboardLayout() {
         </div>
     );
 }
+

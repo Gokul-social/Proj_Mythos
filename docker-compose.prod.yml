@@ -1,4 +1,4 @@
-# Lendora AI - Production Docker Compose
+﻿# Lendora AI - Production Docker Compose
 # Optimized for production deployment
 
 services:
@@ -15,14 +15,7 @@ services:
       - PORT=8000
       - HOST=0.0.0.0
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
-      - ETHEREUM_NETWORK=${ETHEREUM_NETWORK:-arbitrum-testnet}
-      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL:-}
-      - CREDIT_ORACLE_URL=${CREDIT_ORACLE_URL:-}
-      - CREDIT_ORACLE_API_KEY=${CREDIT_ORACLE_API_KEY:-}
-    volumes:
-      - ./logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      - SOLANA_NETWORK"CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -63,4 +56,5 @@ services:
 networks:
   lendora-network:
     driver: bridge
+
 

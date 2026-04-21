@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lendora AI - Login Gate
  * Portal entrance with HeroCube and wallet connection
  */
@@ -62,11 +62,11 @@ export default function LoginGate() {
 
     // Wallet icons mapping
     const walletIcons: Record<string, string> = {
-        metamask: '🦊',
-        coinbase: '🔵',
-        walletconnect: '🔗',
-        trust: '🛡️',
-        rainbow: '🌈',
+        phantom: '👻',
+        coinbase: 'ðŸ”µ',
+        walletconnect: 'ðŸ”—',
+        trust: 'ðŸ›¡ï¸',
+        rainbow: 'ðŸŒˆ',
     };
 
     return (
@@ -147,7 +147,7 @@ export default function LoginGate() {
                         transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="text-sm md:text-lg text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed"
                     >
-                        Privacy-First DeFi Lending on Ethereum with Zero-Knowledge Credit Scoring
+                        AI-Native Agentic Lending on Solana
                     </motion.p>
                 </motion.div>
 
@@ -186,7 +186,7 @@ export default function LoginGate() {
                                     transition={{ delay: 1, duration: 0.5 }}
                                     className="text-2xl md:text-3xl font-bold text-gradient mb-3"
                                 >
-                                    {isConnected ? '✨ Connected!' : 'Connect Wallet'}
+                                    {isConnected ? 'âœ¨ Connected!' : 'Connect Wallet'}
                                 </motion.h2>
                                 {isConnected ? (
                                     <motion.div
@@ -199,7 +199,7 @@ export default function LoginGate() {
                                             {shortAddress}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {balance} ETH • {network}
+                                            {balance} ETH â€¢ {network}
                                         </p>
                                     </motion.div>
                                 ) : (
@@ -209,7 +209,7 @@ export default function LoginGate() {
                                         transition={{ delay: 1.1, duration: 0.5 }}
                                         className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed"
                                     >
-                                        Connect your Ethereum wallet to access privacy-first DeFi lending with AI-powered negotiations
+                                        Connect your Solana wallet (Phantom) to access AI-native agentic lending
                                     </motion.p>
                                 )}
                             </motion.div>
@@ -255,7 +255,7 @@ export default function LoginGate() {
                                                     Entering Portal...
                                                 </>
                                             ) : (
-                                                'Enter Dashboard →'
+                                                'Enter Dashboard â†’'
                                             )}
                                         </Button>
                                     </motion.div>
@@ -328,12 +328,12 @@ export default function LoginGate() {
                                                                 >
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl pixel-border border-primary/20">
-                                                                            {walletIcons[wallet.name] || '💳'}
+                                                                            {walletIcons[wallet.name] || 'ðŸ’³'}
                                                                         </div>
                                                                         <div className="text-left">
                                                                             <p className="font-semibold text-foreground">{wallet.displayName}</p>
                                                                             <p className="text-xs text-muted-foreground">
-                                                                                {wallet.name === 'metamask' ? 'Recommended' : 'Ethereum Wallet'}
+                                                                                {wallet.name === 'phantom' ? 'Recommended' : 'Solana Wallet'}
                                                                             </p>
                                                                         </div>
                                                                     </div>
@@ -353,15 +353,15 @@ export default function LoginGate() {
                                         >
                                             <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                                             <p className="text-sm text-muted-foreground mb-4">
-                                                No Ethereum wallets detected. Install one to continue.
+                                                No Solana wallets detected. Install Phantom to continue.
                                             </p>
                                             <a
-                                                href="https://metamask.io/download/"
+                                                href="https://phantom.app/"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-sm text-primary hover:underline inline-flex items-center gap-1 font-medium"
                                             >
-                                                Get MetaMask
+                                                Get Phantom
                                                 <ExternalLink className="w-3 h-3" />
                                             </a>
                                         </motion.div>
@@ -404,3 +404,6 @@ export default function LoginGate() {
         </div>
     );
 }
+
+
+
