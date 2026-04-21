@@ -1,3 +1,40 @@
+# Dependencies
 node_modules/
-env.example
-.env    
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Rust / Anchor build artifacts
+**/target/
+*.so
+*.rlib
+
+# Cargo lock files in subdirectories (keep root Cargo.lock)
+programs/Cargo.lock
+programs/mythos/Cargo.lock
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# TypeScript build info
+*.tsbuildinfo
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+Thumbs.db
