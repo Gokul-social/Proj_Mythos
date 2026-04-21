@@ -15,6 +15,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AgentNegotiationFeed, useNegotiationMessages, type NegotiationMessage } from '@/components/AgentNegotiationFeed';
 import { X402PaymentVisualizer, generateDemoPayment, type X402PaymentEvent } from '@/components/X402PaymentVisualizer';
 import { WalletButton, useWallet } from '@/components/wallet/SolanaWalletProvider';
+import { SASCreditPanel } from '@/components/SASCreditPanel';
+import { JupiterPriceBanner } from '@/components/JupiterPriceBanner';
 import {
   getJupiterPrice,
   getExplorerUrl,
@@ -99,8 +101,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         transition={{ delay: 0.2 }}
         className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed"
       >
-        Two AI agents negotiate your loan terms on-chain. Lenny finds the best rate,
-        Luna prices the risk — both pay each other in USDC via x402 to get the deal done.
+        Two AI agents negotiate your loan on Solana in real-time — paying each other in USDC via x402 — zero human clicks required.
       </motion.p>
 
       {/* Stats */}
@@ -140,9 +141,16 @@ function HeroSection({ onStart }: { onStart: () => void }) {
             🤖 Start AI Loan Negotiation
           </button>
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <WalletButton />
-            <p className="text-xs text-gray-500">Connect wallet to get started</p>
+          <div className="flex flex-col items-center gap-3">
+            {/* One-Click Demo Mode — no wallet needed */}
+            <button
+              onClick={onStart}
+              id="demo-mode-btn"
+              className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold text-lg shadow-2xl shadow-purple-500/30 transition-all hover:scale-105 active:scale-95"
+            >
+              ⚡ One-Click Demo — No Wallet Needed
+            </button>
+            <p className="text-xs text-gray-500">Or <span className="inline-block"><WalletButton /></span> to use your own wallet</p>
           </div>
         )}
         <a
@@ -366,32 +374,35 @@ export default function MythosPage() {
   const [loanParams, setLoanParams] = useState<LoanParams>({ amount: 1000, termMonths: 12, collateral: 'SOL' });
   const [view, setView] = useState<'hero' | 'demo'>('hero');
 
-  // Simulate Helius event stream
+  // Simulate Helius event stream with live-looking slot numbers
   useEffect(() => {
+    const baseSlot = 456903617;
     const events: HeliusLoanEvent[] = [
-      { eventType: 'jupiter_price_check', message: 'Jupiter: SOL/USD = $180.50 (+2.3%)', slot: 350012345, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'attestation_verified', message: 'SAS attestation verified for LennyBorrower...', slot: 350012346, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'payment_x402', message: 'x402: 0.001 USDC paid for /api/agent/evaluate', slot: 350012347, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'negotiation_round', message: 'Lenny: counter 7.5% → Luna: counter 8.0%', slot: 350012348, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'loan_accepted', message: 'Mythos Anchor: Loan #42 settled at 8.0% APR ✅', slot: 350012349, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'jupiter_price_check', message: '◎ Jupiter: SOL/USD refreshed via Price API v6', slot: baseSlot + 1, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'attestation_verified', message: '🪪 SAS: Credit attestation PDA verified — Tier A', slot: baseSlot + 2, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'payment_x402', message: '💸 x402: 0.001 USDC paid → /api/agent/evaluate', slot: baseSlot + 3, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'negotiation_round', message: '🤖 Lenny: 7.5% → 🌙 Luna: counter 8.0% APR', slot: baseSlot + 4, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'payment_x402', message: '💸 x402: 0.0005 USDC paid → /api/agent/negotiate', slot: baseSlot + 5, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'loan_accepted', message: '✅ Anchor: initialize_loan() — 1000 USDC @ 7.75% settled', slot: baseSlot + 6, timestamp: new Date().toISOString(), network: SOLANA_NETWORK, txSignature: '5vKn2...' },
     ];
+    let slotCounter = baseSlot + 7;
     const interval = setInterval(() => {
       setHeliusEvents(prev => {
         const newEvent = {
           ...events[Math.floor(Math.random() * events.length)],
-          slot: 350012348 + prev.length,
+          slot: slotCounter++,
           timestamp: new Date().toISOString(),
         };
         return [...prev.slice(-50), newEvent];
       });
     }, 4000);
-    // Prime with initial events
     setHeliusEvents(events);
     return () => clearInterval(interval);
   }, []);
 
-  const handleStartNegotiation = useCallback(async () => {
-    if (!wallet.connected || !wallet.publicKey) return;
+  const handleStartNegotiation = useCallback(async (demoMode = false) => {
+    // Demo mode uses a fake public key so no wallet needed
+    const pubkey = wallet.connected && wallet.publicKey ? wallet.publicKey : 'DemoWallet11111111111111111111111111111111';
     setView('demo');
     clearMessages();
     setX402Payments([]);
@@ -402,7 +413,7 @@ export default function MythosPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          borrower_address: wallet.publicKey,
+          borrower_address: pubkey,
           credit_score: 720,
           principal: loanParams.amount,
           interest_rate: 9.5,
@@ -415,7 +426,7 @@ export default function MythosPage() {
 
     // Start frontend negotiation animation
     await startNegotiation({
-      borrower: wallet.publicKey,
+      borrower: pubkey,
       amount: loanParams.amount,
       initialRate: 9.5,
       termMonths: loanParams.termMonths,
@@ -451,7 +462,7 @@ export default function MythosPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <HeroSection onStart={() => { if (wallet.connected) setView('demo'); }} />
+              <HeroSection onStart={() => handleStartNegotiation(false)} />
 
               {/* Feature cards */}
               <div className="max-w-6xl mx-auto mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
@@ -526,9 +537,14 @@ export default function MythosPage() {
                   <LoanRequestForm
                     params={loanParams}
                     onChange={p => setLoanParams(prev => ({ ...prev, ...p }))}
-                    onSubmit={handleStartNegotiation}
+                    onSubmit={() => handleStartNegotiation(false)}
                     isLoading={isRunning}
                   />
+
+                  {/* SAS Credit Panel */}
+                  <div className="mt-4">
+                    <SASCreditPanel walletAddress={wallet.connected && wallet.publicKey ? wallet.publicKey : 'DemoWallet11111111111111111111111111111111'} />
+                  </div>
 
                   {/* Network info */}
                   <div className="mt-4 bg-gray-900/60 rounded-2xl border border-gray-700/50 p-4 text-xs space-y-2">

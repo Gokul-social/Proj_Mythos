@@ -24,6 +24,24 @@
 
 ---
 
+## 🎮 Try It Now
+
+| | |
+|---|---|
+| 🌐 **Live App** | [mythos-solana.vercel.app](https://mythos-solana.vercel.app) *(deploy with `vercel --prod`)* |
+| 📡 **API Docs** | [mythos-api.railway.app/docs](https://mythos-api.railway.app/docs) *(deploy with `railway up`)* |
+| 🔍 **Program** | [Solscan — FGG836...](https://solscan.io/account/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) |
+
+**One-liner — trigger full AI agent negotiation:**
+```bash
+curl -X POST https://mythos-api.railway.app/api/solana/workflow/start \
+  -H "Content-Type: application/json" \
+  -d '{"amount_usdc": 1000, "term_months": 6, "collateral_symbol": "SOL"}'
+```
+
+> No wallet needed — click **⚡ One-Click Demo** on the live app to watch Lenny × Luna negotiate a loan instantly.
+
+
 ## 🚀 What is Mythos?
 
 **Mythos** is an AI-native, agentic DeFi lending protocol built natively on Solana. It eliminates the human negotiation bottleneck in DeFi lending by deploying two autonomous AI agents:
