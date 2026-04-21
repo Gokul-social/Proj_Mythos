@@ -4,12 +4,13 @@ services:
     runtime: python
     region: oregon
     plan: free
+    rootDir: .
     buildCommand: pip install -r backend/api/requirements.txt
     startCommand: cd backend/api && python -m uvicorn server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.0"
+        value: "3.11.0"
       - key: SOLANA_NETWORK
         value: devnet
       - key: SOLANA_DEMO_MODE
