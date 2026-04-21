@@ -14,8 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, ChevronDown, ExternalLink, AlertCircle, Loader2, Sun, Moon } from 'lucide-react';
 import { useWallet } from '@/hooks/useWallet';
 import { useTheme } from 'next-themes';
-
-type WalletName = string;
+import type { WalletName } from '@/lib/wallet/ethereum-wallet';
 
 const ANIMATION_DURATION = 1500;
 
@@ -148,7 +147,7 @@ export default function LoginGate() {
                         transition={{ duration: 0.8, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="text-sm md:text-lg text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed"
                     >
-                        Privacy-First DeFi Lending on Solana with Zero-Knowledge Credit Scoring
+                        Privacy-First DeFi Lending on Ethereum with Zero-Knowledge Credit Scoring
                     </motion.p>
                 </motion.div>
 
@@ -200,7 +199,7 @@ export default function LoginGate() {
                                             {shortAddress}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {balance} SOL • {network}
+                                            {balance} ETH • {network}
                                         </p>
                                     </motion.div>
                                 ) : (
@@ -210,7 +209,7 @@ export default function LoginGate() {
                                         transition={{ delay: 1.1, duration: 0.5 }}
                                         className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed"
                                     >
-                                        Connect your Solana wallet to access privacy-first DeFi lending with AI-powered negotiations
+                                        Connect your Ethereum wallet to access privacy-first DeFi lending with AI-powered negotiations
                                     </motion.p>
                                 )}
                             </motion.div>
@@ -334,7 +333,7 @@ export default function LoginGate() {
                                                                         <div className="text-left">
                                                                             <p className="font-semibold text-foreground">{wallet.displayName}</p>
                                                                             <p className="text-xs text-muted-foreground">
-                                                                                {wallet.name === 'phantom' ? 'Recommended' : 'Solana Wallet'}
+                                                                                {wallet.name === 'metamask' ? 'Recommended' : 'Ethereum Wallet'}
                                                                             </p>
                                                                         </div>
                                                                     </div>
@@ -354,15 +353,15 @@ export default function LoginGate() {
                                         >
                                             <AlertCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                                             <p className="text-sm text-muted-foreground mb-4">
-                                                No Solana wallets detected. Install one to continue.
+                                                No Ethereum wallets detected. Install one to continue.
                                             </p>
                                             <a
-                                                href="https://phantom.app/download"
+                                                href="https://metamask.io/download/"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-sm text-primary hover:underline inline-flex items-center gap-1 font-medium"
                                             >
-                                                Get Phantom
+                                                Get MetaMask
                                                 <ExternalLink className="w-3 h-3" />
                                             </a>
                                         </motion.div>

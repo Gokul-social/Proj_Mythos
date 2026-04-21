@@ -1,6 +1,6 @@
 <div align="center">
 
-# MYTHOS
+# ◎ MYTHOS
 
 ### AI-Native Agentic Lending Protocol on Solana
 
@@ -368,7 +368,7 @@ See [`.env.example`](.env.example) for all options.
 
 <div align="center">
 
-Built for the Solana Hackathon 2026
+Built with ◎ for the Solana Hackathon 2026
 
 **[Back to Top](#what-is-mythos)**
 

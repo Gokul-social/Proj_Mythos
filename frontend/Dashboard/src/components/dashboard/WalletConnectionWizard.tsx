@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/useWallet';
+import { getWalletState } from '@/lib/wallet/ethereum-wallet';
 import { Wallet, Check, Edit2, X } from 'lucide-react';
-
-type WalletName = string;
-const getWalletState = async () => ({ connected: false, address: null });
+import type { WalletName } from '@/lib/wallet/ethereum-wallet';
 
 interface WalletConnectionWizardProps {
     onConnect: (address: string) => void;

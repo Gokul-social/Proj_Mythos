@@ -11,8 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/useWallet';
 import { Wallet, Copy, Check, Edit2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-type WalletName = string;
+import type { WalletName } from '@/lib/wallet/ethereum-wallet';
 
 interface WalletConnectionProps {
     onAddressChange?: (address: string) => void;

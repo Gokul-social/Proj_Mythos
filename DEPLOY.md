@@ -1,372 +1,264 @@
-# Mythos — Deployment Guide (Solana Devnet)
+# Lendora AI - Deployment Guide
 
-Complete guide to build, deploy, and verify the Mythos Anchor program on Solana Devnet.
+## Quick Start (5 minutes)
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Vercel CLI installed (`npm i -g vercel`)
+- Railway CLI installed (`npm i -g @railway/cli`)
+- Git repository initialized
 
 ---
 
-## Prerequisites
+## Architecture
 
-### 1. Install Rust
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-rustup install 1.79.0
-rustup default 1.79.0
 ```
-
-### 2. Install Solana CLI
-
-```bash
-sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.22/install)"
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-solana --version
-```
-
-### 3. Install Anchor CLI
-
-```bash
-cargo install --git https://github.com/coral-xyz/anchor avm --force
-avm install 0.30.1
-avm use 0.30.1
-anchor --version
-```
-
-### 4. Install Node.js Dependencies
-
-```bash
-cd /path/to/Proj_Mythos
-npm install
+┌─────────────────┐     ┌─────────────────┐
+│   VERCEL        │     │   RAILWAY       │
+│   (Frontend)    │ ---> │   (Backend)    │
+│   React + Vite  │     │   FastAPI       │
+│   Static Assets │     │   WebSocket     │
+└─────────────────┘     └─────────────────┘
 ```
 
 ---
 
-## Configuration
+## Step 1: Deploy Backend to Railway
 
-### 1. Configure Solana CLI for Devnet
+### 1.1 Install Railway CLI
 
 ```bash
-solana config set --url https://api.devnet.solana.com
-solana config set --keypair ~/.config/solana/id.json
+npm install -g @railway/cli
 ```
 
-### 2. Generate or Import Deployer Keypair
+### 1.2 Login to Railway
 
-**Generate new keypair:**
 ```bash
-solana-keygen new --outfile ~/.config/solana/id.json
+railway login
 ```
 
-**Or import existing keypair:**
+### 1.3 Initialize and Deploy
+
 ```bash
-solana-keygen recover --outfile ~/.config/solana/id.json
+# From project root
+railway init
+
+# Link to your project
+railway link
+
+# Deploy
+railway up
 ```
 
-### 3. Airdrop SOL (Devnet)
+### 1.4 Set Environment Variables
 
-You need ~5 SOL for deployment + account creation:
+In Railway Dashboard → Variables, add:
 
-```bash
-solana airdrop 5
-solana balance
+| Variable           | Value              | Required |
+| ------------------ | ------------------ | -------- |
+| `PORT`             | `8000`             | Yes      |
+| `ETHEREUM_NETWORK` | `arbitrum-sepolia` | Yes      |
+| `ETHEREUM_RPC_URL` | Your RPC URL       | Yes      |
+| `OLLAMA_BASE_URL`  | Your Ollama URL    | Optional |
+
+### 1.5 Get Your Backend URL
+
+After deployment, Railway will provide a URL like:
+
+```
+https://lendora-ai-backend-production.up.railway.app
 ```
 
-If the faucet rate-limits you, wait 30 seconds and retry, or use the Solana faucet web UI:
-https://faucet.solana.com/
+**Save this URL** - you'll need it for the frontend.
 
-### 4. Verify Configuration
+---
+
+## Step 2: Deploy Frontend to Vercel
+
+### 2.1 Install Vercel CLI
 
 ```bash
-solana config get
-# Expected output:
-# Config File: ~/.config/solana/cli/config.yml
-# RPC URL: https://api.devnet.solana.com
-# WebSocket URL: wss://api.devnet.solana.com/
-# Keypair Path: ~/.config/solana/id.json
-# Commitment: confirmed
+npm install -g vercel
+```
+
+### 2.2 Login to Vercel
+
+```bash
+vercel login
+```
+
+### 2.3 Deploy
+
+```bash
+# From project root
+vercel
+```
+
+When prompted:
+
+- **Set up and deploy?** → Yes
+- **Which scope?** → Your account
+- **Link to existing project?** → No (first time) / Yes (subsequent)
+- **Project name?** → `lendora-ai` (or your preferred name)
+- **Directory?** → `./` (project root)
+- **Override settings?** → No (vercel.json handles this)
+
+### 2.4 Set Environment Variables
+
+```bash
+# Set your backend URL from Step 1.5
+vercel env add VITE_API_URL production
+# When prompted, enter: https://your-backend.railway.app
+
+vercel env add VITE_WS_URL production
+# When prompted, enter: wss://your-backend.railway.app
+```
+
+Or via Vercel Dashboard:
+
+1. Go to your project → Settings → Environment Variables
+2. Add:
+   - `VITE_API_URL` = `https://your-backend.railway.app`
+   - `VITE_WS_URL` = `wss://your-backend.railway.app`
+
+### 2.5 Redeploy with Environment Variables
+
+```bash
+vercel --prod
 ```
 
 ---
 
-## Build
+## Your App is Live!
 
-### 1. Build the Anchor Program
+Vercel will provide your live URL:
 
-```bash
-cd /path/to/Proj_Mythos
-anchor build
 ```
-
-This will:
-- Compile the Rust program to BPF bytecode
-- Generate the IDL at `target/idl/mythos.json`
-- Generate TypeScript types at `target/types/mythos.ts`
-- Create the program keypair at `target/deploy/mythos-keypair.json`
-
-### 2. Get the Program ID
-
-After the first build, a keypair is generated. Extract the program ID:
-
-```bash
-solana address -k target/deploy/mythos-keypair.json
-```
-
-### 3. Update Program ID Everywhere
-
-Replace the placeholder `MythoST111111111111111111111111111111111111` with the real program ID:
-
-```bash
-# Get the actual program ID
-PROGRAM_ID=$(solana address -k target/deploy/mythos-keypair.json)
-echo "Program ID: $PROGRAM_ID"
-
-# Update lib.rs
-sed -i '' "s/MythoST111111111111111111111111111111111111/$PROGRAM_ID/g" programs/mythos/src/lib.rs
-
-# Update Anchor.toml
-sed -i '' "s/MythoST111111111111111111111111111111111111/$PROGRAM_ID/g" Anchor.toml
-
-# Update .env.example
-sed -i '' "s/MythoST111111111111111111111111111111111111/$PROGRAM_ID/g" .env.example
-
-# Update IDL metadata
-sed -i '' "s/MythoST111111111111111111111111111111111111/$PROGRAM_ID/g" target/idl/mythos.json
-```
-
-### 4. Rebuild with Correct Program ID
-
-```bash
-anchor build
+https://lendora-ai.vercel.app
 ```
 
 ---
 
-## Deploy
+## Alternative: Single Command Deployment
 
-### 1. Deploy to Devnet
-
-```bash
-anchor deploy --provider.cluster devnet
-```
-
-Expected output:
-```
-Deploying workspace: https://api.devnet.solana.com
-Upgrade authority: ~/.config/solana/id.json
-Deploying program "mythos"...
-Program path: target/deploy/mythos.so
-Program Id: <YOUR_PROGRAM_ID>
-
-Deploy success
-```
-
-### 2. Verify Deployment
+### Full Deployment Script
 
 ```bash
-# Check program exists on-chain
-solana program show <YOUR_PROGRAM_ID>
+#!/bin/bash
 
-# View on Solana Explorer
-echo "https://explorer.solana.com/address/<YOUR_PROGRAM_ID>?cluster=devnet"
-```
+# Deploy Backend to Railway
+echo "Deploying backend to Railway..."
+railway up --detach
 
----
+# Get Railway URL (you'll need to copy this manually from dashboard)
+echo "Copy your Railway URL from the dashboard"
+read -p "Enter your Railway backend URL: " BACKEND_URL
 
-## Initialize Protocol
+# Deploy Frontend to Vercel
+echo "▲ Deploying frontend to Vercel..."
+vercel --yes
 
-After deployment, initialize the protocol state (one-time operation):
+# Set environment variables
+vercel env add VITE_API_URL production <<< "$BACKEND_URL"
+vercel env add VITE_WS_URL production <<< "${BACKEND_URL/https/wss}"
 
-```bash
-# Using the Anchor test framework (recommended)
-anchor test --provider.cluster devnet --skip-deploy
-```
+# Production deployment
+vercel --prod
 
-Or initialize manually via the backend:
-
-```bash
-# Start backend
-cd backend/api
-pip install -r requirements.txt
-SOLANA_DEMO_MODE=false MYTHOS_PROGRAM_ID=<YOUR_PROGRAM_ID> python -c "
-import asyncio
-from solana_client import MythosClient
-from solders.pubkey import Pubkey
-
-async def init():
-    client = MythosClient.from_env()
-    treasury = client.payer.pubkey()  # Use deployer as treasury for now
-    tx = await client.initialize_protocol(treasury, 15000, 12000)
-    print(f'Protocol initialized: {tx}')
-    await client.close()
-
-asyncio.run(init())
-"
-```
-
----
-
-## Run Tests
-
-### Local Validator Tests
-
-```bash
-anchor test
-```
-
-This starts a local validator, deploys the program, and runs the full test suite.
-
-### Devnet Tests
-
-```bash
-anchor test --provider.cluster devnet
-```
-
----
-
-## Backend Setup
-
-### 1. Install Python Dependencies
-
-```bash
-cd backend/api
-pip install -r requirements.txt
-```
-
-### 2. Create `.env` File
-
-```bash
-cp ../../.env.example .env
-# Edit .env with your actual values:
-# - MYTHOS_PROGRAM_ID=<YOUR_PROGRAM_ID>
-# - HELIUS_RPC_URL=https://devnet.helius-rpc.com/?api-key=<YOUR_API_KEY>
-# - SOLANA_DEMO_MODE=false  (for real on-chain operations)
-# - SOLANA_KEYPAIR_PATH=~/.config/solana/id.json
-```
-
-### 3. Start Backend
-
-```bash
-cd backend/api
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 4. Test API Endpoints
-
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Get protocol state
-curl http://localhost:8000/api/solana/protocol
-
-# Initialize a loan
-curl -X POST http://localhost:8000/api/solana/initialize-loan \
-  -H "Content-Type: application/json" \
-  -d '{
-    "loan_id": 1,
-    "principal": 1000000,
-    "interest_rate_bps": 750,
-    "term_seconds": 2592000,
-    "collateral_mint": "So11111111111111111111111111111111111111112",
-    "stablecoin_mint": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-  }'
-
-# Fetch loan state
-curl http://localhost:8000/api/solana/loan/<BORROWER_PUBKEY>/1
+echo "Deployment complete!"
 ```
 
 ---
 
 ## Troubleshooting
 
-### Insufficient SOL
+### Error: Build failed on Vercel
 
-**Error:** `Transaction simulation failed: Attempt to debit an account but found no record of a prior credit`
-
-**Fix:**
-```bash
-solana airdrop 5
-# If rate-limited, wait 30s and retry
-solana airdrop 2
-solana airdrop 2
-```
-
-### Invalid PDA
-
-**Error:** `Error: AnchorError ... A seeds constraint was violated`
-
-**Fix:** Ensure PDA seeds match exactly:
-```
-loan PDA:     ["loan",     borrower_pubkey_bytes, loan_id_le_bytes]
-vault PDA:    ["vault",    loan_pda_bytes]
-protocol PDA: ["protocol"]
-```
-
-The loan_id must be encoded as **little-endian u64** (8 bytes).
-
-### Token Account Missing
-
-**Error:** `Error: Account ... could not be parsed as token account`
-
-**Fix:** Create the associated token account before interacting:
-```bash
-spl-token create-account <MINT_ADDRESS>
-```
-
-Or in code:
-```typescript
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
-const ata = await getOrCreateAssociatedTokenAccount(
-  connection, payer, mint, owner
-);
-```
-
-### Program Already Deployed (Upgrade)
-
-**Error:** `Error: program ... already deployed`
-
-**Fix:** Use `anchor upgrade` instead:
-```bash
-anchor upgrade target/deploy/mythos.so --program-id <PROGRAM_ID> --provider.cluster devnet
-```
-
-### Anchor Build Fails (BPF toolchain)
-
-**Error:** `error: could not compile ... for BPF target`
+**Cause:** Node version mismatch
 
 **Fix:**
+
 ```bash
-# Install BPF SDK
-solana-install update
-cargo build-sbf --version
-# If missing:
-cargo install --git https://github.com/solana-labs/cargo-build-sbf
+# Ensure Node 20 is used
+echo "20" > frontend/Dashboard/.nvmrc
 ```
 
-### Account Already Initialized
+### Error: WebSocket connection failed
 
-**Error:** `Error: AccountAlreadyInitialized`
+**Cause:** Mixed content (HTTP/HTTPS)
 
-This means the protocol or loan PDA already exists. For protocol, this is expected (only initialize once). For loans, use a different `loan_id`.
+**Fix:** Ensure both URLs use HTTPS/WSS:
 
-### Clock Drift on Local Validator
-
-**Error:** Tests fail with time-related checks
-
-**Fix:** The local validator uses simulated time. Use `--slots-per-epoch 32` for faster epochs:
-```bash
-solana-test-validator --slots-per-epoch 32 --reset
 ```
+VITE_API_URL=https://...  (not http://)
+VITE_WS_URL=wss://...     (not ws://)
+```
+
+### Error: CORS blocked
+
+**Cause:** Backend not configured for your frontend domain
+
+**Fix:** The backend already allows all origins (`allow_origins=["*"]`), but for production, consider restricting this in `backend/api/server.py`:
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://your-frontend.vercel.app"],
+    ...
+)
+```
+
+### Error: API returns 404
+
+**Cause:** Backend not running or wrong URL
+
+**Fix:**
+
+1. Check Railway logs: `railway logs`
+2. Verify health endpoint: `curl https://your-backend.railway.app/health`
+
+### Error: 250MB limit exceeded on Vercel (backend)
+
+**Cause:** AI dependencies too large for Vercel serverless
+
+**Fix:** This is why we use Railway for the backend. The `api/index.py` is a minimal fallback only.
 
 ---
 
-## Environment Variable Reference
+## Environment Variables Reference
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MYTHOS_PROGRAM_ID` | Deployed program address | `MythoS...` |
-| `HELIUS_RPC_URL` | Helius devnet RPC endpoint | `https://devnet.helius-rpc.com/?api-key=KEY` |
-| `SOLANA_KEYPAIR_PATH` | Path to deployer keypair | `~/.config/solana/id.json` |
-| `SOLANA_DEMO_MODE` | `true` = mock data, `false` = real on-chain | `false` |
-| `SOLANA_NETWORK` | Network name | `devnet` |
-| `USDC_MINT` | USDC mint address (devnet) | `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` |
+### Frontend (Vercel)
+
+| Variable       | Description     | Example                       |
+| -------------- | --------------- | ----------------------------- |
+| `VITE_API_URL` | Backend API URL | `https://backend.railway.app` |
+| `VITE_WS_URL`  | WebSocket URL   | `wss://backend.railway.app`   |
+
+### Backend (Railway)
+
+| Variable           | Description           | Example                                    |
+| ------------------ | --------------------- | ------------------------------------------ |
+| `PORT`             | Server port           | `8000`                                     |
+| `HOST`             | Server host           | `0.0.0.0`                                  |
+| `ETHEREUM_NETWORK` | Ethereum network      | `arbitrum-sepolia`                         |
+| `ETHEREUM_RPC_URL` | RPC endpoint          | `https://arb-sepolia.g.alchemy.com/v2/...` |
+| `OLLAMA_BASE_URL`  | Ollama API (optional) | `http://ollama:11434`                      |
+
+---
+
+## Security Checklist
+
+- [ ] Never commit `.env` files to git
+- [ ] Use Railway/Vercel secrets for sensitive data
+- [ ] Set specific CORS origins in production
+- [ ] Use HTTPS/WSS only in production
+- [ ] Rotate API keys regularly
+
+---
+
+## Support
+
+- **Vercel Docs:** https://vercel.com/docs
+- **Railway Docs:** https://docs.railway.app
+- **FastAPI Docs:** https://fastapi.tiangolo.com

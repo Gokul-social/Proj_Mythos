@@ -159,7 +159,7 @@ export function TransactionModal({ isOpen, onClose, type, asset }: TransactionMo
 
     // Render asset icon
     const AssetIcon = () => {
-        const stablecoins: Stablecoin[] = ['USDC', 'PYUSD', 'USDT'];
+        const stablecoins: Stablecoin[] = ['USDC', 'DAI', 'USDT', 'TUSD', 'BUSD', 'USDD'];
         if (stablecoins.includes(asset.symbol as Stablecoin)) {
             return <StablecoinLogo symbol={asset.symbol as Stablecoin} size={48} />;
         }

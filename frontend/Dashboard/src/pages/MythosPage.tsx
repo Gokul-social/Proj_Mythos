@@ -73,7 +73,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300 mb-6"
       >
-        <span className="animate-pulse">SOL</span>
+        <span className="animate-pulse">◎</span>
         Built for Solana Hackathon 2026
         <span className="px-2 py-0.5 bg-purple-500/20 rounded-full text-purple-200 text-[10px] font-semibold">x402 · SAS · Helius · Jupiter</span>
       </motion.div>
@@ -111,7 +111,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         className="flex flex-wrap justify-center gap-6 mb-10 text-sm"
       >
         {[
-          { label: 'SOL Price', value: `$${solPrice.toFixed(2)}`, icon: 'SOL', color: 'text-green-400' },
+          { label: 'SOL Price', value: `$${solPrice.toFixed(2)}`, icon: '◎', color: 'text-green-400' },
           { label: 'TPS', value: '~4,000', icon: 'TPS', color: 'text-yellow-400' },
           { label: 'Settlement', value: '<1s', icon: 'SET', color: 'text-blue-400' },
           { label: 'Protocol', value: 'x402', icon: 'PAY', color: 'text-purple-400' },
@@ -152,7 +152,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
           className="px-8 py-4 rounded-xl border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-white font-semibold transition-all"
           id="view-program-btn"
         >
-          View Anchor Program
+          ◎ View Anchor Program
         </a>
       </motion.div>
     </div>
@@ -472,7 +472,7 @@ export default function MythosPage() {
                     tag: 'Solana SAS'
                   },
                   {
-                    icon: 'SOL', title: 'Anchor Programs',
+                    icon: '◎', title: 'Anchor Programs',
                     desc: 'Loans settled in sub-second via Anchor smart contracts on Solana Devnet',
                     tag: 'Anchor'
                   },

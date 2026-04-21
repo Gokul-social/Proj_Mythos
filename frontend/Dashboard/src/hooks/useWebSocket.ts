@@ -152,6 +152,7 @@ export function useWebSocket() {
 
       case 'workflow_channel_status':
       case 'l2_status':
+      case 'hydra_status': // Keep backward compatibility
         {
           const channelData = message.data ?? {};
           const incomingMode = String(channelData.mode ?? 'unavailable');

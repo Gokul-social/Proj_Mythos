@@ -50,7 +50,8 @@ export function validateSolanaAddress(address: string): boolean {
   return solanaPattern.test(trimmed);
 }
 
-// Removed Ethereum alias
+// Backward-compatible alias for older imports.
+export const validateEthereumAddress = validateSolanaAddress;
 
 /**
  * Validate and sanitize numeric input
