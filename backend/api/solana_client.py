@@ -73,7 +73,7 @@ class MythosClient:
         )
         program_id = os.getenv(
             "MYTHOS_PROGRAM_ID",
-            "MythoST111111111111111111111111111111111111",
+            "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr",
         )
 
         # Load keypair from file or env

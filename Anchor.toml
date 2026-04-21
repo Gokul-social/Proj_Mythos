@@ -5,10 +5,10 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-mythos = "MythoST111111111111111111111111111111111111"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [programs.devnet]
-mythos = "MythoST111111111111111111111111111111111111"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [registry]
 url = "https://api.apr.dev"
