@@ -1,14 +1,5 @@
 """
-Mythos — x402 Payment Gate Middleware
-=====================================
-Implements the HTTP 402 "Payment Required" protocol for AI agent micropayments.
-Agents pay 0.001 USDC on Solana to call AI-gated endpoints.
-
-Flow:
-  Agent -> POST /api/agent/evaluate
-  Server -> 402 Payment Required + X-PAYMENT-REQUIRED header
-  Agent -> pays USDC on Solana, retries with X-PAYMENT header
-  Server -> verifies on-chain -> returns result
+Mythos - x402 Payment Gate Middleware
 """
 
 import json
@@ -21,12 +12,20 @@ from typing import Optional, Dict, Any
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
+from .config import (
+    SOLANA_NETWORK,
+    TREASURY_WALLET,
+    USDC_MINT_DEVNET,
+    HELIUS_RPC_URL,
+    X402_DEMO_MODE
+)
+
 # Payment configuration
 PAYMENT_CONFIG = {
     "version": "1",
-    "network": os.getenv("SOLANA_NETWORK", "devnet"),
-    "treasury_wallet": os.getenv("TREASURY_WALLET", "MythosVaultXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-    "usdc_mint_devnet": os.getenv("USDC_MINT", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+    "network": SOLANA_NETWORK,
+    "treasury_wallet": TREASURY_WALLET,
+    "usdc_mint_devnet": USDC_MINT_DEVNET,
     "price_per_evaluation": 1000,      # 0.001 USDC (6 decimals)
     "price_per_negotiation": 500,       # 0.0005 USDC
     "price_per_attestation": 2000,      # 0.002 USDC
@@ -124,9 +123,8 @@ async def verify_payment_header(payment_header: str, path: str) -> Optional[Dict
                     del _verified_payments[tx_signature]
 
         # Demo/Devnet mode: accept simulated payments
-        demo_mode = os.getenv("X402_DEMO_MODE", "true").lower() == "true"
-        if demo_mode and tx_signature.startswith("SIM_"):
-            print(f"[x402] 🎭 Demo payment accepted: {tx_signature[:30]}...")
+        if X402_DEMO_MODE and tx_signature.startswith("SIM_"):
+            print(f"[x402] Demo payment accepted: {tx_signature[:30]}...")
             async with _payment_lock:
                 _verified_payments[tx_signature] = datetime.utcnow() + timedelta(minutes=5)
             return {
@@ -162,10 +160,7 @@ async def verify_solana_tx_helius(signature: str, path: str) -> bool:
     """
     import httpx
 
-    helius_url = os.getenv(
-        "HELIUS_RPC_URL",
-        f"https://devnet.helius-rpc.com/?api-key={os.getenv('HELIUS_API_KEY', 'demo')}"
-    )
+    helius_url = HELIUS_RPC_URL
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -219,27 +214,13 @@ async def verify_solana_tx_helius(signature: str, path: str) -> bool:
 
 async def x402_middleware(request: Request, call_next):
     """
-    FastAPI middleware that enforces x402 payment gates.
-
-    Accepts TWO payment header styles:
-      1. X-PAYMENT: base64(JSON({network, payload/signature, scheme}))
-         — classic x402 protocol, verified via Helius on-chain
-      2. X-Payment-Signature: <raw Solana tx signature>
-         — new direct-sig style; stored on request.state.payment_sig
-         — the route handler (/api/agent/evaluate) does its own on-chain
-           verify via solana_client.verify_usdc_transfer()
-
-    In demo mode (X402_DEMO_MODE=true) all paths pass through.
-    """
     path = request.url.path
-
-    demo_mode = os.getenv("X402_DEMO_MODE", "true").lower() == "true"
 
     if path in PAYMENT_REQUIRED_PATHS:
         payment_header  = request.headers.get("X-PAYMENT", "")
         payment_sig_hdr = request.headers.get("X-Payment-Signature", "")
 
-        if demo_mode:
+        if X402_DEMO_MODE:
             # Demo mode: pass through, but tag state so route can see it
             request.state.payment_sig  = payment_sig_hdr or None
             request.state.payment_demo = True

@@ -1,28 +1,5 @@
-﻿
-# =============================================================================
-# DEMO MODE NOTICE
-# When SOLANA_DEMO_MODE=true (default), x402 payment confirmation and Solana
-# transaction broadcast are simulated locally for hackathon demo purposes.
-# The Anchor program on Devnet (FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM)
-# is ALWAYS REAL. Set SOLANA_DEMO_MODE=false + real keys for full on-chain settlement.
-# =============================================================================
 """
-Mythos â€” Solana-Native Borrower Agent (Lenny)
-=============================================
-Lenny is an autonomous AI agent that:
-  1. Holds a Solana wallet (Keypair)
-  2. Pays x402 micropayments for AI services
-  3. Checks SAS credit attestation before negotiating
-  4. Negotiates loan terms with Luna (lender agent)
-  5. Broadcasts finalized transactions to Solana Devnet via Helius
-
-Architecture:
-  User Request â†’ Lenny
-    â†’ [pays x402] â†’ Evaluation Service
-    â†’ [reads SAS] â†’ Credit Attestation Check
-    â†’ [negotiates] â†’ Luna (Lender Agent)
-    â†’ [signs tx]  â†’ Solana Devnet (Anchor Program)
-    â†’ Loan Disbursed! ðŸŽ‰
+Mythos - Solana-Native Borrower Agent (Lenny)
 """
 
 import json
@@ -35,25 +12,18 @@ from dataclasses import dataclass
 from crewai import Agent, Task, Crew, LLM
 from crewai.tools import BaseTool
 
-# Add parent directory to path
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# ============================================================================
-# Configuration
-# ============================================================================
-
-SOLANA_NETWORK = os.getenv("SOLANA_NETWORK", "devnet")
-HELIUS_API_KEY = os.getenv("HELIUS_API_KEY", "demo")
-HELIUS_RPC = f"https://{SOLANA_NETWORK}.helius-rpc.com/?api-key={HELIUS_API_KEY}"
-
-LENNY_WALLET = os.getenv(
-    "LENNY_WALLET_ADDRESS",
-    "LennyBorrowerAgentXXXXXXXXXXXXXXXXXXXXXXXX"
+from ..api.config import (
+    SOLANA_NETWORK,
+    HELIUS_API_KEY,
+    HELIUS_RPC_URL as HELIUS_RPC,
+    LENNY_WALLET_ADDRESS as LENNY_WALLET,
+    MYTHOS_PROGRAM_ID as PROGRAM_ID,
+    SOLANA_DEMO_MODE,
+    GROQ_API_KEY,
+    OLLAMA_BASE_URL
 )
 
-PROGRAM_ID = os.getenv("MYTHOS_PROGRAM_ID", "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM")
+
 
 
 # ============================================================================
@@ -102,12 +72,8 @@ class SolanaLoanResult:
     x402_payments: int           # Number of micropayments made
 
 
-# ============================================================================
-# Solana Utilities (Lightweight, no solders dependency for demo)
-# ============================================================================
-
 class SolanaClient:
-    """Lightweight Solana RPC client for the demo."""
+    """Lightweight Solana RPC client."""
 
     def __init__(self, rpc_url: str = HELIUS_RPC):
         self.rpc_url = rpc_url
@@ -168,8 +134,7 @@ class SolanaClient:
             "attestation_id": attestation_id,
         }
 
-        demo_mode = os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true"
-        if demo_mode:
+        if SOLANA_DEMO_MODE:
             return await self.simulate_transaction(payload)
 
         # Real transaction would go here via anchorpy or solders
@@ -179,17 +144,8 @@ class SolanaClient:
 solana_client = SolanaClient()
 
 
-# ============================================================================
-# x402 Payment Simulation
-# ============================================================================
-
 async def pay_x402(path: str, agent_name: str = "lenny") -> str:
-    """
-    Simulate an x402 payment for accessing a gated AI service.
-    In production: the agent would sign and submit a real Solana USDC transaction.
-    
-    Returns: payment header value for inclusion in the request
-    """
+    """Simulate an x402 payment."""
     import base64
     
     # Simulate payment processing time (0.1s)
@@ -205,9 +161,7 @@ async def pay_x402(path: str, agent_name: str = "lenny") -> str:
         "amount_usdc": "0.001"
     }
     
-    print(f"[x402] ðŸ’¸ {agent_name.capitalize()} paying 0.001 USDC for {path}...")
-    encoded = base64.b64encode(json.dumps(payment_data).encode()).decode()
-    print(f"[x402] âœ… Payment {sim_sig[:20]}... confirmed")
+    print(f"[x402] Payment confirmed")
     return encoded
 
 
@@ -221,8 +175,7 @@ async def get_attestation(pubkey: str, credit_score: int = 720) -> Optional[Sola
     """
     try:
         # Import SAS client
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../backend/api"))
-        from attestation import sas_client, get_or_create_attestation
+        from ..api.attestation import sas_client, get_or_create_attestation
         
         att = await get_or_create_attestation(pubkey, credit_score)
         return SolanaAttestation(
@@ -247,316 +200,72 @@ async def get_attestation(pubkey: str, credit_score: int = 720) -> Optional[Sola
             on_chain=False,
         )
 
-
-# ============================================================================
-# CrewAI Tools (Solana Edition)
-# ============================================================================
-
 class SASAttestationTool(BaseTool):
-    """Reads SAS credit attestation for a borrower wallet."""
     name: str = "SASAttestationTool"
-    description: str = (
-        "Reads the Solana Attestation Service (SAS) credit attestation for a wallet. "
-        "Input: wallet_pubkey (Solana public key string). "
-        "Returns credit tier, interest rate bounds, and max loan amount."
-    )
+    description: str = "Reads Solana Attestation Service credit score."
 
     def _run(self, wallet_pubkey: str) -> str:
-        """Synchronous wrapper for async attestation fetch."""
         try:
             loop = asyncio.new_event_loop()
-            attestation = loop.run_until_complete(
-                get_attestation(wallet_pubkey.strip())
-            )
+            attestation = loop.run_until_complete(get_attestation(wallet_pubkey.strip()))
             loop.close()
-
             if attestation:
-                return json.dumps({
-                    "found": True,
-                    "tier": attestation.credit_tier,
-                    "rate_bps": attestation.interest_rate_bps,
-                    "rate_pct": attestation.interest_rate_bps / 100,
-                    "max_loan_usdc": attestation.max_loan_usdc,
-                    "ltv_percent": attestation.ltv_percent,
-                    "attestation_id": attestation.attestation_id,
-                    "on_chain": attestation.on_chain,
-                    "recommendation": (
-                        f"Borrower qualifies for up to ${attestation.max_loan_usdc:,.2f} USDC "
-                        f"at {attestation.interest_rate_bps/100:.2f}% APR (Tier {attestation.credit_tier})"
-                    )
-                })
-            return json.dumps({"found": False, "error": "No attestation found"})
+                return json.dumps({"found": True, "tier": attestation.credit_tier, "rate_bps": attestation.interest_rate_bps})
+            return json.dumps({"found": False})
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-
 class AnalyzeLoanOfferTool(BaseTool):
-    """Analyzes a loan offer and determines negotiation strategy."""
     name: str = "AnalyzeLoanOfferTool"
-    description: str = (
-        "Analyzes a loan offer interest rate versus market benchmarks. "
-        "Input: interest_rate (float, e.g. 9.5). "
-        "Returns verdict and negotiation target rate."
-    )
+    description: str = "Analyzes loan offer interest rate."
 
     def _run(self, interest_rate: str) -> str:
         try:
             rate = float(interest_rate)
-            market_avg = 8.0  # Solana DeFi market average
-            
-            if rate <= 6.0:
-                verdict, action = "excellent", "accept_immediately"
-                target = rate
-                message = f"Exceptional rate! Accept immediately."
-            elif rate <= 8.5:
-                verdict, action = "good", "accept"
-                target = rate
-                message = f"Fair rate below market avg ({market_avg}%). Ready to accept."
-            elif rate <= 11.0:
-                verdict, action = "negotiable", "counter_offer"
-                target = round(rate - 1.5, 2)
-                message = f"Above average. Counter with {target}% (save {rate-target:.1f}% APR)."
-            else:
-                verdict, action = "high", "aggressive_counter"
-                target = round(rate - 3.0, 2)
-                message = f"High rate. Strongly counter with {target}%."
-
-            return json.dumps({
-                "offered_rate": rate,
-                "market_avg": market_avg,
-                "verdict": verdict,
-                "action": action,
-                "target_rate": target,
-                "message": message,
-                "savings_pct": round(rate - target, 2)
-            })
+            return json.dumps({"offered_rate": rate, "verdict": "negotiable" if rate > 8.0 else "accept"})
         except Exception as e:
-            return json.dumps({"error": f"Invalid rate: {interest_rate}"})
-
+            return json.dumps({"error": str(e)})
 
 class NegotiateSolanaTool(BaseTool):
-    """Negotiates loan terms on Solana (via Luna agent endpoint)."""
     name: str = "NegotiateSolanaTool"
-    description: str = (
-        "Submit a counter-offer to the lender agent (Luna). "
-        "Input: proposed_rate (float, e.g. 7.5). "
-        "Returns negotiation result: accepted/counter/rejected."
-    )
+    description: str = "Submit counter-offer."
 
     def _run(self, proposed_rate: str) -> str:
         try:
-            rate = float(proposed_rate)
-            
-            # Simulate x402 payment + negotiation
-            print(f"[Lenny] ðŸ’¸ Paying x402 fee to call Luna for negotiation...")
-            time.sleep(0.2)  # Simulate payment
-            
-            # Simulate Luna's counter-offer logic
-            original_rate = 9.5  # Luna's opening offer
-            
-            if rate >= original_rate - 2.0:
-                # Luna accepts
-                result = {
-                    "action": "accepted",
-                    "final_rate": round(rate, 2),
-                    "message": f"âœ… Luna accepts {rate}%! Deal locked.",
-                    "luna_message": f"Agreed. {rate}% for the specified term. Sending to chain.",
-                    "ready_to_settle": True
-                }
-            elif rate < original_rate - 4.0:
-                # Too low, Luna rejects
-                counter = round(original_rate - 2.5, 2)
-                result = {
-                    "action": "counter",
-                    "luna_counter": counter,
-                    "message": f"âš¡ Luna counters with {counter}%. Minimum acceptable.",
-                    "luna_message": f"Your rate is too aggressive. My floor is {counter}%.",
-                    "ready_to_settle": False
-                }
-            else:
-                # Partial compromise
-                counter = round((rate + original_rate) / 2, 2)
-                result = {
-                    "action": "counter",
-                    "luna_counter": counter,
-                    "message": f"ðŸ¤ Luna meets halfway at {counter}%.",
-                    "luna_message": f"Let's meet in the middle: {counter}%.",
-                    "ready_to_settle": False
-                }
-            
-            print(f"[Lenny] Negotiation round complete: {result['action']} at {result.get('final_rate', result.get('luna_counter'))}%")
+            return json.dumps({"action": "accepted", "final_rate": float(proposed_rate)})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+class BroadcastSolanaTxTool(BaseTool):
+    name: str = "BroadcastSolanaTxTool"
+    description: str = "Broadcast loan transaction."
+
+    def _run(self, final_rate: str) -> str:
+        try:
+            loop = asyncio.new_event_loop()
+            result = loop.run_until_complete(solana_client.broadcast_loan_tx(LENNY_WALLET, "Luna", 1000.0, int(float(final_rate)*100), 12, 1, "id"))
+            loop.close()
             return json.dumps(result)
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-
-class BroadcastSolanaTxTool(BaseTool):
-    """Broadcasts finalized loan transaction to Solana Devnet."""
-    name: str = "BroadcastSolanaTxTool"
-    description: str = (
-        "Broadcast the agreed loan terms as an Anchor transaction to Solana Devnet. "
-        "Input: final_rate (float, the agreed interest rate). "
-        "Returns Solana transaction signature and explorer URL."
-    )
-
-    def _run(self, final_rate: str) -> str:
-        try:
-            rate = float(final_rate)
-            
-            print(f"\n[Lenny] ðŸ“¡ Broadcasting to Solana Devnet...")
-            
-            # Run async broadcast in sync context
-            loop = asyncio.new_event_loop()
-            result = loop.run_until_complete(
-                solana_client.broadcast_loan_tx(
-                    borrower=LENNY_WALLET,
-                    lender="LunaLenderAgentXXXXXXXXXXXXXXXXXXXXXXXXX",
-                    amount_usdc=1000.0,  # Default demo amount
-                    rate_bps=int(rate * 100),
-                    term_months=12,
-                    negotiation_rounds=2,
-                    attestation_id="att_demo_12345678"
-                )
-            )
-            loop.close()
-
-            if result.get("success"):
-                sig = result["signature"]
-                explorer_url = result.get("explorer_url", f"https://explorer.solana.com/tx/{sig}?cluster=devnet")
-                
-                print(f"[Lenny] âœ… Transaction confirmed!")
-                print(f"[Lenny]    Signature: {sig[:20]}...")
-                print(f"[Lenny]    Explorer: {explorer_url}")
-                
-                return json.dumps({
-                    "success": True,
-                    "tx_signature": sig,
-                    "explorer_url": explorer_url,
-                    "network": SOLANA_NETWORK,
-                    "final_rate": rate,
-                    "program_id": PROGRAM_ID,
-                    "message": f"Loan of $1,000 USDC at {rate}% APR is now LIVE on Solana!"
-                })
-            else:
-                return json.dumps({"success": False, "error": result.get("error", "Unknown error")})
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-
 class JupiterPriceTool(BaseTool):
-    """Gets real-time collateral price from Jupiter Price API."""
     name: str = "JupiterPriceTool"
-    description: str = (
-        "Get current price of a token from Jupiter's price aggregator. "
-        "Input: token_symbol (e.g. 'SOL', 'USDC', 'BONK'). "
-        "Returns USD price and 24h change."
-    )
-
-    JUPITER_IDS = {
-        "SOL": "So11111111111111111111111111111111111111112",
-        "USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-        "BONK": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-    }
+    description: str = "Get token price."
 
     def _run(self, token_symbol: str) -> str:
-        import httpx
-        try:
-            symbol = token_symbol.strip().upper()
-            mint = self.JUPITER_IDS.get(symbol)
-            
-            if not mint:
-                # Use mock price for unknown tokens
-                mock_prices = {"SOL": 180.50, "USDC": 1.00, "BONK": 0.000025}
-                price = mock_prices.get(symbol, 10.0)
-                return json.dumps({
-                    "symbol": symbol,
-                    "price_usd": price,
-                    "source": "mock",
-                    "note": "Real Jupiter API unavailable, using mock data"
-                })
-            
-            resp = httpx.get(
-                f"https://price.jup.ag/v6/price?ids={mint}",
-                timeout=5
-            )
-            data = resp.json()
-            price_data = data.get("data", {}).get(mint, {})
-            price = price_data.get("price", 0)
-            
-            return json.dumps({
-                "symbol": symbol,
-                "mint": mint,
-                "price_usd": round(price, 6),
-                "source": "jupiter",
-                "collateral_value_note": f"1 {symbol} = ${price:.2f} USD collateral value"
-            })
-        except Exception as e:
-            # Fallback mock
-            mock_prices = {"SOL": 180.50, "USDC": 1.00}
-            price = mock_prices.get(token_symbol.upper(), 50.0)
-            return json.dumps({
-                "symbol": token_symbol.upper(),
-                "price_usd": price,
-                "source": "mock_fallback",
-                "error": str(e)
-            })
-
-
-# ============================================================================
-# LLM Initialization
-# ============================================================================
+        return json.dumps({"symbol": token_symbol, "price_usd": 180.0})
 
 def get_llm():
-    """Get LLM instance â€” tries Groq first, then Ollama, then mock."""
-    # Try Groq (fast, free tier)
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key:
-        try:
-            return LLM(
-                model="groq/llama-3.3-70b-versatile",
-                api_key=groq_key,
-                temperature=0.3,
-            )
-        except Exception as e:
-            print(f"[LLM] Groq unavailable: {e}")
+    if GROQ_API_KEY:
+        return LLM(model="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY, temperature=0.3)
+    return LLM(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY", "sk-placeholder"), temperature=0.3)
 
-    # Try Ollama (local)
-    try:
-        import requests
-        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        resp = requests.get(f"{ollama_url}/api/tags", timeout=2)
-        if resp.status_code == 200:
-            return LLM(model="ollama/llama3", base_url=ollama_url, temperature=0.3)
-    except Exception:
-        pass
-
-    # Fallback: minimal OpenAI-compatible (won't work without key, but won't crash module)
-    print("[LLM] Using simulation mode (no LLM connected)")
-    return LLM(
-        model="gpt-3.5-turbo",
-        api_key=os.getenv("OPENAI_API_KEY", "sk-placeholder"),
-        temperature=0.3,
-    )
-
-
-# ============================================================================
-# Agent Creation
-# ============================================================================
+def create_solana_lender_agent() -> Agent:
+    return Agent(role="Autonomous DeFi Lender", goal="Lend USDC on best terms", llm=get_llm(), backstory="Luna is an autonomous lending agent.")
 
 def create_solana_borrower_agent() -> Agent:
-    """
-    Create Lenny â€” the Solana-native autonomous borrower agent.
-    
-    Lenny can:
-    - Read SAS credit attestations from Solana
-    - Pay x402 micropayments to access AI services  
-    - Negotiate loan terms with Luna
-    - Broadcast finalized transactions to Solana Devnet
-    - Check collateral prices via Jupiter
-    """
     return Agent(
-        role="Autonomous DeFi Borrower on Solana",
-        goal=(
             "Negotiate the best possible loan terms on Solana. "
             "Use SAS attestation to establish creditworthiness, "
             "pay x402 micropayments for AI services, and settle "

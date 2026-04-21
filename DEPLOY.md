@@ -56,7 +56,7 @@ Then push to GitHub and connect the repo to Vercel:
 
 1. Go to [railway.app](https://railway.app) -> New Project -> Deploy from GitHub
 2. Select `Proj_Mythos` repo
-3. **Start command**: `uvicorn backend.api.server:app --host 0.0.0.0 --port $PORT`
+3. Start command: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
 4. Set environment variables:
    ```
    HELIUS_API_KEY=your_helius_key

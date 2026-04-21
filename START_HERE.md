@@ -59,7 +59,7 @@ Everything else can stay as-is for a devnet demo.
 
 ```bash
 pip install -r requirements.txt
-uvicorn backend.api.server:app --host 0.0.0.0 --port 8000
+uvicorn backend.api.main:app --host 0.0.0.0 --port 8000
 ```
 
 Verify: `curl http://localhost:8000/health` -> `{"status":"ok","network":"devnet"}`

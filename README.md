@@ -92,23 +92,23 @@ curl -X POST https://mythos-api.railway.app/api/solana/initialize-loan \
 
 ```bash
 # Terminal 1 - Backend
-cp .env.example .env       # add HELIUS_API_KEY + GROQ_API_KEY
+cp .env.example .env
 pip install -r requirements.txt
-uvicorn backend.api.server:app --port 8000
+uvicorn backend.api.main:app --port 8000
 
 # Terminal 2 - Frontend
 cd frontend/Dashboard
-cp .env.example .env       # add VITE_HELIUS_API_KEY
+cp .env.example .env
 npm install && npm run dev
 ```
 
 Then:
-1. Open `http://localhost:5173`
-2. Click **"Try Demo - No Wallet Needed"**
-3. Watch Lenny and Luna negotiate from **9.5% -> ~7.5% APR** in real-time
-4. Check the **Jupiter price banner** (live SOL/USD)
-5. Check the **Helius activity feed** (real Devnet slot numbers)
-6. Verify the program: paste `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM` into [Solana Explorer](https://explorer.solana.com/?cluster=devnet) -> confirms executable, BPFLoader deployed
+1. Open http://localhost:5173
+2. Click "Try Demo - No Wallet Needed"
+3. Watch Lenny and Luna negotiate from 9.5% to ~7.5% APR in real-time
+4. Check the Jupiter price banner (live SOL/USD)
+5. Check the Helius activity feed (real Devnet slot numbers)
+6. Verify the program: paste FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM into Solana Explorer -> confirms executable, BPFLoader deployed
 
 ---
 
@@ -194,7 +194,23 @@ sequenceDiagram
 
 ## Quick Start
 
-### Prerequisites
+### Project Structure
+
+```text
+backend/
+├── agents/             # Autonomous AI Agents
+│   ├── borrower.py     # Lenny logic
+│   └── lender.py       # Luna logic
+├── api/                # FastAPI Application
+│   ├── main.py         # Entry point
+│   ├── routers/        # API Routes
+│   ├── config.py       # Configuration
+│   └── models.py       # Data Models
+frontend/               # React + Vite Dashboard
+programs/               # Solana Anchor Program
+```
+
+## Prerequisites
 - Python 3.10+, Node.js 18+
 - Free [Helius API key](https://helius.dev) (optional - demo mode works without it)
 - Free [Groq API key](https://console.groq.com) (optional - simulation mode works without it)
@@ -205,17 +221,16 @@ sequenceDiagram
 git clone https://github.com/MUTHUKUMARAN-K-1/Proj_Mythos.git
 cd Proj_Mythos
 cp .env.example .env
-# Add your HELIUS_API_KEY and GROQ_API_KEY
 ```
 
 ### 2. Start the Backend
 
 ```bash
 pip install -r requirements.txt
-cd backend/api
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-API docs: **http://localhost:8000/docs**
+
+API docs: http://localhost:8000/docs
 
 ### 3. Start the Frontend
 
@@ -223,7 +238,8 @@ API docs: **http://localhost:8000/docs**
 cd frontend/Dashboard
 npm install && npm run dev
 ```
-Open: **http://localhost:5173**
+
+Open: http://localhost:5173
 
 ### 4. Try the Demo
 
@@ -312,44 +328,15 @@ const ws = new WebSocket('ws://localhost:8000/ws');
 
 ---
 
-## Tech Stack
+## Project Details
 
-| Layer | Technology |
-|---|---|
-| **Smart Contract** | Anchor (Rust) on Solana Devnet |
-| **AI Agents** | CrewAI + Groq Llama 3.3 70B |
-| **Payment Gate** | x402 HTTP 402 middleware (custom) |
-| **RPC & Events** | Helius Enhanced API + Webhooks |
-| **Prices** | Jupiter Price API v6 |
-| **Credit Identity** | Solana Attestation Service (SAS) |
-| **Backend** | FastAPI (Python) |
-| **Frontend** | React 18 + TypeScript + Vite + Framer Motion |
-| **Wallet** | Phantom / Solflare + demo mode |
-
----
-
-## Project Structure
-
-```
-Proj_Mythos/
-|-- programs/mythos/src/lib.rs      # Anchor smart contract
-|   |-- initialize_loan()           # Lock collateral, open loan
-|   |-- accept_loan()               # Luna disburses USDC
-|   |-- repay_loan()                # Release collateral
-|   `-- liquidate()                 # Seize overdue collateral
-|-- agents/
-|   |-- solana_borrower_agent.py    # Lenny - x402 + SAS + Jupiter
-|   `-- solana_lender_agent.py      # Luna - risk pricing
-|-- backend/api/
-|   |-- server.py                   # FastAPI app
-|   |-- x402_middleware.py          # HTTP 402 payment gate
-|   |-- attestation.py              # SAS client
-|   `-- helius_client.py            # Helius RPC + webhooks
-`-- frontend/Dashboard/src/
-    |-- components/AgentNegotiationFeed.tsx
-    |-- components/X402PaymentVisualizer.tsx
-    `-- pages/MythosPage.tsx
-```
+Mythos is built on a modern stack:
+- Smart Contract: Anchor (Rust) on Solana Devnet
+- AI Agents: CrewAI + Groq Llama 3.3 70B
+- Payment Gate: x402 HTTP 402 middleware
+- RPC & Events: Helius Enhanced API + Webhooks
+- Prices: Jupiter Price API v6
+- Credit Identity: Solana Attestation Service (SAS)
 
 ---
 

@@ -1,17 +1,8 @@
 """
-Mythos — Solana On-Chain Client
+Mythos - Solana On-Chain Client
 ================================
 Submits real transactions to Solana Devnet using solders + solana-py.
 Requires BACKEND_SIGNER_KEYPAIR (base58 private key) env var.
-
-Capabilities:
-  - generate_keypair()           → print pubkey for airdrop
-  - initialize_loan_tx()         → build + send initialize_loan instruction
-  - verify_usdc_transfer()       → confirm a USDC transfer tx on-chain
-
-Usage (demo mode enabled by SOLANA_DEMO_MODE=true):
-  - All methods return realistic simulated results when demo mode is on.
-  - Set SOLANA_DEMO_MODE=false + BACKEND_SIGNER_KEYPAIR for real devnet txs.
 """
 
 import os
@@ -22,6 +13,17 @@ import json
 import asyncio
 from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
+
+from .config import (
+    MYTHOS_PROGRAM_ID,
+    SOLANA_NETWORK,
+    HELIUS_API_KEY,
+    SOLANA_DEMO_MODE,
+    SPL_TOKEN_PROGRAM_ID,
+    SPL_RENT_SYSVAR_ID,
+    USDC_MINT_DEVNET,
+    HELIUS_RPC_URL as RPC_URL
+)
 
 try:
     import httpx
@@ -47,45 +49,16 @@ except ImportError as e:
     print(f"[SolanaClient] Solana deps unavailable ({e}) — demo mode only")
 
 
-# ============================================================================
-# Config
-# ============================================================================
-
-MYTHOS_PROGRAM_ID = os.getenv(
-    "MYTHOS_PROGRAM_ID", "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
-)
-SOLANA_NETWORK    = os.getenv("SOLANA_NETWORK", "devnet")
-HELIUS_API_KEY    = os.getenv("HELIUS_API_KEY", "demo")
-DEMO_MODE         = os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true"
-
-# Well-known program IDs (moved to env to resolve scanner alerts)
-SPL_TOKEN_PROGRAM_ID = os.getenv("SPL_TOKEN_PROGRAM_ID", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-SPL_RENT_SYSVAR_ID  = os.getenv("SPL_RENT_SYSVAR_ID", "SysvarRent111111111111111111111111111111111")
-USDC_MINT_DEVNET = os.getenv("USDC_MINT", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
-
-RPC_URL = (
-    f"https://{SOLANA_NETWORK}.helius-rpc.com/?api-key={HELIUS_API_KEY}"
-    if HELIUS_API_KEY != "demo"
-    else f"https://api.{SOLANA_NETWORK}.solana.com"
-)
-
 # Anchor discriminator for initialize_loan = sha256("global:initialize_loan")[:8]
 INITIALIZE_LOAN_DISCRIMINATOR: bytes = hashlib.sha256(b"global:initialize_loan").digest()[:8]
 
-# Backward-compatible alias for older code paths.
+# Backward-compatible alias
+DEMO_MODE = SOLANA_DEMO_MODE
 USC_MINT_DEVNET = USDC_MINT_DEVNET
 
 
-# ============================================================================
-# Keypair Management
-# ============================================================================
-
 def load_signer_keypair() -> Optional["Keypair"]:
-    """
-    Load backend signer keypair from BACKEND_SIGNER_KEYPAIR env var.
-    Value is a base58-encoded 64-byte secret key (as output by `solana-keygen new`).
-    Returns None if not set or solders unavailable.
-    """
+    """Load signer keypair from BACKEND_SIGNER_KEYPAIR."""
     if not SOLDERS_AVAILABLE:
         return None
     raw = os.getenv("BACKEND_SIGNER_KEYPAIR", "")
@@ -111,25 +84,16 @@ def generate_and_print_keypair() -> Dict[str, str]:
     pubkey = str(kp.pubkey())
     secret_b58 = base58.b58encode(bytes(kp)).decode()
 
-    print(f"\n[SolanaClient] 🔑 Generated new devnet keypair")
+    print(f"\n[SolanaClient] Generated new devnet keypair")
     print(f"  Pubkey  : {pubkey}")
     print(f"  Secret  : {secret_b58}")
-    print(f"\n  ➜ Fund this wallet:")
-    print(f"    solana airdrop 1 {pubkey} --url devnet")
-    print(f"\n  ➜ Add to .env:")
-    print(f"    BACKEND_SIGNER_KEYPAIR={secret_b58}")
-
     return {"pubkey": pubkey, "secret_b58": secret_b58}
 
-
-# ============================================================================
-# RPC Helpers
-# ============================================================================
 
 async def _rpc(method: str, params: list) -> Any:
     """Raw JSON-RPC call to Solana."""
     if not HTTPX_AVAILABLE:
-        raise RuntimeError("httpx is not installed; install requirements.txt for real Solana RPC calls")
+        raise RuntimeError("httpx not installed")
 
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.post(RPC_URL, json={
@@ -142,32 +106,28 @@ async def _rpc(method: str, params: list) -> Any:
 
 
 async def get_latest_blockhash() -> str:
-    """Get the latest blockhash from Solana."""
+    """Get the latest blockhash."""
     result = await _rpc("getLatestBlockhash", [{"commitment": "confirmed"}])
     return result["value"]["blockhash"]
 
 
 async def send_transaction(tx_b64: str) -> str:
-    """Send a base64-encoded signed transaction. Returns signature."""
+    """Send base64-encoded transaction."""
     result = await _rpc("sendTransaction", [
         tx_b64,
         {"encoding": "base64", "skipPreflight": False, "preflightCommitment": "confirmed"}
     ])
-    return result  # transaction signature
+    return result
 
 
 async def confirm_transaction(sig: str, max_retries: int = 10) -> bool:
-    """Poll until transaction is confirmed or max retries exceeded."""
+    """Poll until transaction is confirmed."""
     for _ in range(max_retries):
         try:
             result = await _rpc("getSignatureStatuses", [[sig]])
             statuses = result.get("value", [])
             if statuses and statuses[0]:
                 confirmation = statuses[0].get("confirmationStatus")
-                err = statuses[0].get("err")
-                if err:
-                    print(f"[SolanaClient] ❌ TX failed: {err}")
-                    return False
                 if confirmation in ("confirmed", "finalized"):
                     return True
         except Exception:
@@ -176,20 +136,12 @@ async def confirm_transaction(sig: str, max_retries: int = 10) -> bool:
     return False
 
 
-# ============================================================================
-# Instruction Builder: initialize_loan
-# ============================================================================
-
 def build_initialize_loan_data(
     amount_usdc: int,
     initial_rate_bps: int,
     term_months: int,
     attestation_id: bytes,
 ) -> bytes:
-    """
-    Serialize initialize_loan instruction data.
-    Layout: discriminator(8) + amount_usdc(u64 LE) + initial_rate_bps(u16 LE)
-            + term_months(u8) + attestation_id([u8;32])
     """
     assert len(attestation_id) == 32, "attestation_id must be 32 bytes"
     return (
