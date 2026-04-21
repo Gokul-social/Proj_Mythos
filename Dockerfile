@@ -1,4 +1,4 @@
-# Lendora AI - Full Stack Dockerfile
+﻿# Lendora AI - Full Stack Dockerfile
 # Combined backend and frontend for single-container deployment
 
 # ============================================================================
@@ -24,7 +24,6 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 # Copy backend code
 COPY backend/ ./backend/
 COPY agents/ ./agents/
-COPY hydra/ ./hydra/
 COPY midnight/ ./midnight/
 
 # ============================================================================
@@ -90,4 +89,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Start both services
 CMD ["/start.sh"]
+
 

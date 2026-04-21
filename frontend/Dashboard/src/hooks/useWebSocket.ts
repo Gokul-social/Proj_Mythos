@@ -19,7 +19,7 @@ interface Conversation {
 }
 
 interface L2Status {
-  mode: 'channel' | 'direct' | 'mock' | 'unavailable' | 'l2';
+  mode: 'l2' | 'direct' | 'unavailable';
   connected?: boolean;
   network_state?: string;
   active_negotiations?: number;
@@ -30,13 +30,8 @@ interface WorkflowStep {
   step: number;
   name: string;
   status: string;
-  details: Record<string, unknown>;
+  details: unknown;
   timestamp: string;
-}
-
-interface SocketMessage {
-  type: string;
-  data?: Record<string, unknown>;
 }
 
 interface WebSocketState {
@@ -91,7 +86,7 @@ export function useWebSocket() {
 
       wsRef.current.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data) as SocketMessage;
+          const message = JSON.parse(event.data);
           handleMessage(message);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
@@ -121,94 +116,71 @@ export function useWebSocket() {
     }
   }, []);
 
-  const handleMessage = (message: SocketMessage) => {
+  interface WebSocketMessage {
+    type: string;
+    /** Most server messages carry a `data` payload */
+    data?: Record<string, unknown>;
+    /** agent_status messages carry `agents` instead of `data` */
+    agents?: AgentStatus;
+    /** workflow_step messages carry `step` */
+    step?: WorkflowStep;
+  }
+
+  const handleMessage = (message: WebSocketMessage) => {
     switch (message.type) {
       case 'connected':
         console.log('WebSocket connection confirmed');
         break;
 
-      case 'agent_status':
-        {
-        const statusValue = message.data?.status;
-        const status: AgentStatus['status'] =
-          statusValue === 'idle' || statusValue === 'negotiating' || statusValue === 'analyzing'
-            ? statusValue
-            : 'idle';
-        const task = typeof message.data?.task === 'string' ? message.data.task : undefined;
-        const agentData: AgentStatus = task ? { status, task } : { status };
-
+      case 'agent_status': {
+        const status = (message.agents ?? message.data) as AgentStatus;
         setState(prev => ({
           ...prev,
-          agentStatus: agentData,
-          stats: { ...prev.stats, agentStatus: agentData.status }
+          agentStatus: status,
+          stats: { ...prev.stats, agentStatus: status.status }
         }));
-        }
         break;
+      }
 
       case 'conversation_update':
         // Fetch latest conversation
         fetchLatestConversation();
         break;
 
-      case 'workflow_channel_status':
+      case 'network_status':
       case 'l2_status':
-        {
-          const channelData = message.data ?? {};
-          const incomingMode = String(channelData.mode ?? 'unavailable');
-          const modeValue = incomingMode === 'hydra' || incomingMode === 'l2'
-            ? 'channel'
-            : incomingMode;
-          const normalizedMode: L2Status['mode'] =
-            modeValue === 'channel' ||
-            modeValue === 'direct' ||
-            modeValue === 'mock' ||
-            modeValue === 'l2' ||
-            modeValue === 'unavailable'
-              ? modeValue
-              : 'unavailable';
-
+      case 'hydra_status': { // Backward-compat alias — backend now sends network_status
+        const d = message.data as { connected?: boolean; network_state?: string; head_state?: string; active_negotiations?: number; current_session_id?: string; current_head_id?: string };
         setState(prev => ({
           ...prev,
           l2Status: {
-            mode: normalizedMode,
-            connected: channelData.connected as boolean | undefined,
-            network_state: (channelData.head_state as string | undefined) || (channelData.network_state as string | undefined),
-            active_negotiations: channelData.active_negotiations as number | undefined,
-            current_session_id: (channelData.current_head_id as string | undefined) || (channelData.current_session_id as string | undefined)
-          }
+            mode: 'l2',  // Always Solana L1 — mode field kept for UI compat
+            connected: d.connected ?? false,
+            network_state: d.network_state || d.head_state || 'devnet',
+            active_negotiations: d.active_negotiations,
+            current_session_id: d.current_session_id || d.current_head_id
+          } as L2Status
         }));
-        }
         break;
+      }
 
-      case 'workflow_step':
-        {
-        const stepData = message.data ?? {};
-        const workflowStep: WorkflowStep = {
-          step: Number(stepData.step ?? 0),
-          name: typeof stepData.name === 'string' ? stepData.name : 'Unknown Step',
-          status: typeof stepData.status === 'string' ? stepData.status : 'unknown',
-          details: stepData.details && typeof stepData.details === 'object'
-            ? (stepData.details as Record<string, unknown>)
-            : {},
-          timestamp: typeof stepData.timestamp === 'string' ? stepData.timestamp : new Date().toISOString(),
-        };
-
+      case 'workflow_step': {
+        const step = (message.step ?? message.data) as WorkflowStep;
         setState(prev => ({
           ...prev,
-          workflowSteps: [...prev.workflowSteps.slice(-9), workflowStep] // Keep last 10 steps
+          workflowSteps: [...prev.workflowSteps.slice(-9), step] // Keep last 10 steps
         }));
-        }
         break;
+      }
 
-      case 'stats_update':
-        {
-        const statsData = (message.data ?? {}) as Partial<WebSocketState['stats']>;
+      case 'stats_update': {
+        const statsData = message.data as Partial<WebSocketState['stats']>;
         setState(prev => ({
           ...prev,
           stats: { ...prev.stats, ...statsData }
         }));
-        }
         break;
+      }
 
       case 'workflow_started':
         // Reset workflow steps for new workflow
@@ -276,3 +248,4 @@ export function useWebSocket() {
     fetchLatestConversation
   };
 }
+

@@ -1,12 +1,5 @@
 """
-Mythos — Helius RPC & Webhook Client
-=====================================
-Helius provides enhanced Solana RPCs and webhook-based real-time
-on-chain event streaming. Used for:
-  - Real-time loan account monitoring
-  - Transaction confirmation callbacks
-  - Payment verification for x402 gates
-  - Enhanced transaction parsing (human-readable Solana data)
+Mythos - Helius RPC & Webhook Client
 """
 
 import os
@@ -16,22 +9,19 @@ import httpx
 from typing import Any, Dict, List, Optional, Callable
 from datetime import datetime
 
-
-HELIUS_API_KEY = os.getenv("HELIUS_API_KEY", "demo")
-SOLANA_NETWORK = os.getenv("SOLANA_NETWORK", "devnet")
+from .config import (
+    HELIUS_API_KEY,
+    SOLANA_NETWORK,
+    HELIUS_RPC_URL,
+    MYTHOS_PROGRAM_ID
+)
 
 # Helius endpoints
-HELIUS_RPC_URL = f"https://{SOLANA_NETWORK}.helius-rpc.com/?api-key={HELIUS_API_KEY}"
 HELIUS_API_URL = f"https://api{'-dev' if SOLANA_NETWORK == 'devnet' else ''}.helius.xyz/v0"
-
-# Mythos program ID
-MYTHOS_PROGRAM_ID = os.getenv("MYTHOS_PROGRAM_ID", "MythosLend1111111111111111111111111111111111")
 
 
 class HeliusClient:
-    """
-    Helius enhanced RPC + API client for real-time Solana event streaming.
-    """
+    """Helius enhanced RPC + API client."""
 
     def __init__(self):
         self._api_key = HELIUS_API_KEY

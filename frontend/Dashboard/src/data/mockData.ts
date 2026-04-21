@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lendora AI - Mock Data
  * MVP mock data for Dashboard, Markets, Transactions, and Notifications
  */
@@ -54,8 +54,8 @@ export const mockDashboardData: DashboardData = {
 // Mock Markets Data
 export const mockMarkets: MarketAsset[] = [
     {
-        symbol: 'ETH',
-        name: 'Ethereum',
+        symbol: 'SOL',
+        name: 'Solana',
         supplyRate: 2.5,
         borrowRate: 4.2,
         totalLiquidity: 1250000,
@@ -128,7 +128,7 @@ export const mockTransactions: Transaction[] = [
         id: 'tx-005',
         type: 'supply',
         amount: 5000,
-        asset: 'ETH',
+        asset: 'SOL',
         status: 'pending',
         timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
         description: 'Supplying 5,000 ETH to the lending pool',
@@ -196,4 +196,6 @@ export const mockNotifications: Notification[] = [
         read: true,
     },
 ];
+
+
 

@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Lendora AI - Enhanced Wallet Connection
- * Supports MetaMask and manual address input
+ * Supports Phantom and Solana wallet adapters
  */
 
 import { useState, useEffect } from 'react';
@@ -11,8 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/useWallet';
 import { Wallet, Copy, Check, Edit2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-type WalletName = string;
+import type { WalletName } from '@/lib/wallet/ethereum-wallet';
 
 interface WalletConnectionProps {
     onAddressChange?: (address: string) => void;
@@ -50,9 +49,9 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
     const handleRetryConnection = async () => {
         // Force a fresh connection attempt
         if (installedWallets.length > 0) {
-            const metamaskWallet = installedWallets.find(w => w.name === 'metamask' && w.installed);
-            if (metamaskWallet) {
-                await handleConnect('metamask');
+            const PhantomWallet = installedWallets.find(w => w.name === 'phantom' && w.installed);
+            if (PhantomWallet) {
+                await handleConnect('phantom');
             }
         }
     };
@@ -87,11 +86,11 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
 
     // Wallet icons mapping
     const walletIcons: Record<string, string> = {
-        metamask: 'MM',
-        coinbase: 'CB',
-        walletconnect: 'WC',
-        trust: 'TR',
-        rainbow: 'RB',
+        phantom: '👻',
+        coinbase: 'ðŸ”µ',
+        walletconnect: 'ðŸ”—',
+        trust: 'ðŸ›¡ï¸',
+        rainbow: 'ðŸŒˆ',
     };
 
     return (
@@ -106,7 +105,7 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-foreground/80 font-medium">Connected Wallet</p>
-                            <p className="font-semibold text-foreground mt-0.5">MetaMask</p>
+                            <p className="font-semibold text-foreground mt-0.5">Phantom</p>
                         </div>
                         <Button
                             variant="outline"
@@ -135,8 +134,8 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                             <Label className="text-xs font-medium text-muted-foreground">Address</Label>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    value={isValidAddress(currentAddress)
-                                        ? currentShortAddress
+                                    value={isValidAddress(currentAddress) 
+                                        ? currentShortAddress 
                                         : 'Invalid address format'}
                                     readOnly
                                     className={`font-mono text-sm bg-background/50 flex-1 ${
@@ -188,14 +187,14 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                                 .map((wallet) => (
                                     <Button
                                         key={wallet.name}
-                                        variant={wallet.name === 'metamask' ? 'default' : 'outline'}
+                                        variant={wallet.name === 'phantom' ? 'default' : 'outline'}
                                         onClick={() => handleConnect(wallet.name)}
                                         disabled={isConnecting}
-                                        className={`justify-start ${wallet.name === 'metamask' ? 'bg-primary text-primary-foreground' : ''}`}
+                                        className={`justify-start ${wallet.name === 'phantom' ? 'bg-primary text-primary-foreground' : ''}`}
                                     >
-                                        <span className="mr-2">{walletIcons[wallet.name] || 'W'}</span>
+                                        <span className="mr-2">{walletIcons[wallet.name] || 'ðŸ’³'}</span>
                                         {wallet.displayName}
-                                        {wallet.name === 'metamask' && (
+                                        {wallet.name === 'phantom' && (
                                             <span className="ml-auto text-xs opacity-75">Recommended</span>
                                         )}
                                     </Button>
@@ -203,7 +202,7 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                         </div>
                         {installedWallets.filter(w => w.installed).length === 0 && (
                             <p className="text-xs text-muted-foreground mt-2">
-                                No wallets detected. Install MetaMask or another Ethereum wallet extension.
+                                No wallets detected. Install Phantom or another Solana wallet extension.
                             </p>
                         )}
                     </div>
@@ -234,7 +233,7 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                                         className="font-mono text-sm"
                                     />
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        Enter your Ethereum address to use without wallet connection
+                                        Enter your Solana address to use without wallet connection
                                     </p>
                                 </motion.div>
                             )}
@@ -250,10 +249,10 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                                     <div className="text-xs text-red-400 space-y-1">
                                         <p className="font-medium">Troubleshooting:</p>
                                         <ol className="list-decimal list-inside space-y-1 ml-2">
-                                            <li>Check your MetaMask extension - look for a connection notification</li>
-                                            <li>Click on the MetaMask extension icon in your browser toolbar</li>
+                                            <li>Check your Phantom extension - look for a connection notification</li>
+                                            <li>Click on the Phantom icon (ðŸ¦Š) in your browser toolbar</li>
                                             <li>Approve the connection request if you see one</li>
-                                            <li>Make sure MetaMask is unlocked</li>
+                                            <li>Make sure Phantom is unlocked</li>
                                         </ol>
                                     </div>
                                     <Button
@@ -270,14 +269,14 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
                         </div>
                     )}
 
-                    {/* Helpful Tips - Only show if MetaMask is installed */}
-                    {installedWallets.some(w => w.name === 'metamask' && w.installed) && !error && (
+                    {/* Helpful Tips - Only show if Phantom is installed */}
+                    {installedWallets.some(w => w.name === 'phantom' && w.installed) && !error && (
                         <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                             <p className="text-xs text-blue-500 font-medium mb-2">Quick Tips</p>
                             <ul className="text-xs text-blue-400 space-y-1">
-                                <li>• Make sure MetaMask is unlocked</li>
-                                <li>• Click the MetaMask icon if you see a notification</li>
-                                <li>• Check browser popup blocker settings</li>
+                                <li>â€¢ Make sure Phantom is unlocked</li>
+                                <li>â€¢ Click the Phantom icon if you see a notification</li>
+                                <li>â€¢ Check browser popup blocker settings</li>
                             </ul>
                         </div>
                     )}
@@ -294,3 +293,6 @@ export function WalletConnection({ onAddressChange, defaultAddress }: WalletConn
         </Card>
     );
 }
+
+
+

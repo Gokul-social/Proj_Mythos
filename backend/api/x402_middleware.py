@@ -1,14 +1,5 @@
 """
-Mythos — x402 Payment Gate Middleware
-=====================================
-Implements the HTTP 402 "Payment Required" protocol for AI agent micropayments.
-Agents pay 0.001 USDC on Solana to call AI-gated endpoints.
-
-Flow:
-  Agent -> POST /api/agent/evaluate
-  Server -> 402 Payment Required + X-PAYMENT-REQUIRED header
-  Agent -> pays USDC on Solana, retries with X-PAYMENT header
-  Server -> verifies on-chain -> returns result
+Mythos - x402 Payment Gate Middleware
 """
 
 import json
@@ -21,12 +12,20 @@ from typing import Optional, Dict, Any
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
+from .config import (
+    SOLANA_NETWORK,
+    TREASURY_WALLET,
+    USDC_MINT_DEVNET,
+    HELIUS_RPC_URL,
+    X402_DEMO_MODE
+)
+
 # Payment configuration
 PAYMENT_CONFIG = {
     "version": "1",
-    "network": os.getenv("SOLANA_NETWORK", "devnet"),
-    "treasury_wallet": os.getenv("TREASURY_WALLET", "MythosVaultXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-    "usdc_mint_devnet": os.getenv("USDC_MINT", "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),
+    "network": SOLANA_NETWORK,
+    "treasury_wallet": TREASURY_WALLET,
+    "usdc_mint_devnet": USDC_MINT_DEVNET,
     "price_per_evaluation": 1000,      # 0.001 USDC (6 decimals)
     "price_per_negotiation": 500,       # 0.0005 USDC
     "price_per_attestation": 2000,      # 0.002 USDC
@@ -95,10 +94,10 @@ def build_402_response(path: str, amount: int) -> JSONResponse:
 async def verify_payment_header(payment_header: str, path: str) -> Optional[Dict[str, Any]]:
     """
     Verify the X-PAYMENT header from the agent.
-
+    
     In production: verifies the Solana transaction on-chain via Helius.
     In demo mode: accepts a simulated payment token.
-
+    
     Returns: payment info dict if valid, None if invalid
     """
     try:
@@ -118,15 +117,14 @@ async def verify_payment_header(payment_header: str, path: str) -> Optional[Dict
         async with _payment_lock:
             if tx_signature in _verified_payments:
                 if _verified_payments[tx_signature] > datetime.utcnow():
-                    print(f"[x402][CACHE] Cached payment: {tx_signature[:20]}...")
+                    print(f"[x402] ✅ Cached payment: {tx_signature[:20]}...")
                     return {"signature": tx_signature, "cached": True}
                 else:
                     del _verified_payments[tx_signature]
 
         # Demo/Devnet mode: accept simulated payments
-        demo_mode = os.getenv("X402_DEMO_MODE", "true").lower() == "true"
-        if demo_mode and tx_signature.startswith("SIM_"):
-            print(f"[x402][DEMO] Payment accepted: {tx_signature[:30]}...")
+        if X402_DEMO_MODE and tx_signature.startswith("SIM_"):
+            print(f"[x402] Demo payment accepted: {tx_signature[:30]}...")
             async with _payment_lock:
                 _verified_payments[tx_signature] = datetime.utcnow() + timedelta(minutes=5)
             return {
@@ -141,10 +139,10 @@ async def verify_payment_header(payment_header: str, path: str) -> Optional[Dict
         if verified:
             async with _payment_lock:
                 _verified_payments[tx_signature] = datetime.utcnow() + timedelta(minutes=30)
-            print(f"[x402][OK] On-chain payment verified: {tx_signature[:20]}...")
+            print(f"[x402] ✅ On-chain payment verified: {tx_signature[:20]}...")
             return {"signature": tx_signature, "network": network, "on_chain": True}
 
-        print(f"[x402][ERROR] Payment verification failed: {tx_signature[:20]}...")
+        print(f"[x402] ❌ Payment verification failed: {tx_signature[:20]}...")
         return None
 
     except Exception as e:
@@ -162,10 +160,7 @@ async def verify_solana_tx_helius(signature: str, path: str) -> bool:
     """
     import httpx
 
-    helius_url = os.getenv(
-        "HELIUS_RPC_URL",
-        f"https://devnet.helius-rpc.com/?api-key={os.getenv('HELIUS_API_KEY', 'demo')}"
-    )
+    helius_url = HELIUS_RPC_URL
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -207,7 +202,7 @@ async def verify_solana_tx_helius(signature: str, path: str) -> bool:
                 post_amount = int(post.get("uiTokenAmount", {}).get("amount", 0))
                 received = post_amount - pre_amount
                 if received >= required_amount:
-                    print(f"[x402][OK] Treasury received {received} USDC-lamports")
+                    print(f"[x402] Treasury received {received} USDC-lamports ✅")
                     return True
 
         return False
@@ -219,35 +214,40 @@ async def verify_solana_tx_helius(signature: str, path: str) -> bool:
 
 async def x402_middleware(request: Request, call_next):
     """
-    FastAPI middleware that enforces x402 payment gates.
-
-    Protected routes return HTTP 402 unless a valid X-PAYMENT header is present.
-    """
     path = request.url.path
 
-    # Check if this path requires payment
     if path in PAYMENT_REQUIRED_PATHS:
-        payment_header = request.headers.get("X-PAYMENT")
+        payment_header  = request.headers.get("X-PAYMENT", "")
+        payment_sig_hdr = request.headers.get("X-Payment-Signature", "")
 
-        if not payment_header:
+        if X402_DEMO_MODE:
+            # Demo mode: pass through, but tag state so route can see it
+            request.state.payment_sig  = payment_sig_hdr or None
+            request.state.payment_demo = True
+        elif payment_sig_hdr:
+            # New style: route handler owns verification — just pass the sig
+            request.state.payment_sig  = payment_sig_hdr
+            request.state.payment_demo = False
+            print(f"[x402] X-Payment-Signature present for {path} — deferring to route verifier")
+        elif payment_header:
+            # Classic style: verify in middleware
+            payment_info = await verify_payment_header(payment_header, path)
+            if not payment_info:
+                return JSONResponse(
+                    status_code=402,
+                    content={
+                        "error": "Payment Invalid",
+                        "message": "Payment verification failed. Provide a valid Solana transaction."
+                    }
+                )
+            print(f"[x402] ✅ Classic X-PAYMENT verified for {path}")
+            request.state.payment     = payment_info
+            request.state.payment_sig = payment_info.get("signature")
+            request.state.payment_demo = False
+        else:
             required_amount = PAYMENT_REQUIRED_PATHS[path]
-            print(f"[x402][REQUIRED] Payment required for {path} ({required_amount} USDC-lamports)")
+            print(f"[x402] 💸 Payment required for {path} ({required_amount} USDC-lamports)")
             return build_402_response(path, required_amount)
-
-        # Verify the payment
-        payment_info = await verify_payment_header(payment_header, path)
-        if not payment_info:
-            return JSONResponse(
-                status_code=402,
-                content={
-                    "error": "Payment Invalid",
-                    "message": "Payment verification failed. Please provide a valid Solana transaction."
-                }
-            )
-
-        print(f"[x402][OK] Payment verified for {path}")
-        # Add payment info to request state for route handlers
-        request.state.payment = payment_info
 
     response = await call_next(request)
     return response
@@ -257,7 +257,7 @@ def simulate_agent_payment(path: str, agent_name: str = "lenny") -> str:
     """
     Simulate an agent making a payment (for demo purposes).
     In production, the agent would actually sign and submit a Solana transaction.
-
+    
     Returns: payment header value ready to be sent
     """
     sim_signature = f"SIM_{agent_name}_{int(datetime.utcnow().timestamp() * 1000)}"
@@ -269,7 +269,7 @@ def simulate_agent_payment(path: str, agent_name: str = "lenny") -> str:
         "agent": agent_name
     }
     encoded = base64.b64encode(json.dumps(payment_data).encode()).decode()
-    print(f"[x402][SIM] Agent '{agent_name}' simulating payment for {path}")
+    print(f"[x402] 🤖 Agent '{agent_name}' simulating payment for {path}")
     return encoded
 
 

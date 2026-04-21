@@ -21,9 +21,9 @@
     }
   ],
   "env": {
-    "OLLAMA_BASE_URL": "@ollama_base_url",
     "SOLANA_NETWORK": "@solana_network",
-    "HELIUS_RPC_URL": "@helius_rpc_url"
+    "HELIUS_API_KEY": "@helius_api_key",
+    "MYTHOS_PROGRAM_ID": "@mythos_program_id",
+    "GROQ_API_KEY": "@groq_api_key"
   }
 }
-

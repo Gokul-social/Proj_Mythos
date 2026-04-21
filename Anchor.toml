@@ -1,14 +1,12 @@
-[toolchain]
-
 [features]
-seeds = false
+seeds = true
 skip-lint = false
 
-[programs.localnet]
-mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
-
 [programs.devnet]
-mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
+mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
+
+[programs.localnet]
+mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
 
 [registry]
 url = "https://api.apr.dev"
@@ -18,4 +16,7 @@ cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[workspace]
+members = ["programs/mythos"]

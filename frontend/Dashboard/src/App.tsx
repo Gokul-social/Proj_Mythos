@@ -41,19 +41,11 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Routes>
-                  {/* Mythos Solana page — primary entry point */}
-                  <Route path="/" element={<MythosPage />} />
+                  {/* Mythos — Solana agentic lending (primary entry point) */}
+                  <Route path="/"       element={<MythosPage />} />
                   <Route path="/mythos" element={<MythosPage />} />
-                  {/* Legacy routes */}
-                  <Route path="/login" element={<LoginGate />} />
-                  <Route path="/dashboard" element={<AppLayout><DashboardLayout /></AppLayout>} />
-                  <Route path="/portfolio" element={<AppLayout><Portfolio /></AppLayout>} />
-                  <Route path="/loans" element={<AppLayout><Loans /></AppLayout>} />
-                  <Route path="/transactions" element={<AppLayout><Transactions /></AppLayout>} />
-                  <Route path="/markets" element={<AppLayout><Markets /></AppLayout>} />
-                  <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
-                  <Route path="/legacy" element={<Index />} />
-                  <Route path="*" element={<NotFound />} />
+                  {/* All other paths → 404 (legacy routes hidden from submission) */}
+                  <Route path="*"       element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
             </TooltipProvider>

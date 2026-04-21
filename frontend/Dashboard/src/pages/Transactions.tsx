@@ -135,7 +135,7 @@ export default function Transactions() {
                     <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                     <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
                     <p className="text-muted-foreground">
-                        Please connect your Solana wallet to view transactions
+                        Please connect your Solana wallet (Phantom) to view transactions
                     </p>
                 </Card>
             </div>
@@ -213,12 +213,12 @@ export default function Transactions() {
                                         </p>
                                         {tx.txHash && (
                                             <a
-                                                href={`https://solscan.io/tx/${tx.txHash}`}
+                                                href={`https://etherscan.io/tx/${tx.txHash}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-xs text-primary hover:underline flex items-center gap-1 mt-1 justify-end"
                                             >
-                                                View on Solscan
+                                                View on Etherscan
                                                 <ExternalLink className="w-3 h-3" />
                                             </a>
                                         )}

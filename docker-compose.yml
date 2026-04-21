@@ -1,69 +1,52 @@
 services:
   # ============================================================================
-  # Backend API Server
+  # Mythos Backend — FastAPI + Solana agent stack
   # ============================================================================
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: lendora-backend
+    container_name: mythos-backend
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
       - PORT=8000
       - HOST=0.0.0.0
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
-      - SOLANA_NETWORK=${SOLANA_NETWORK:-mainnet-beta}
-      - HELIUS_RPC_URL=${HELIUS_RPC_URL:-}
-      - CREDIT_ORACLE_URL=${CREDIT_ORACLE_URL:-}
-      - CREDIT_ORACLE_API_KEY=${CREDIT_ORACLE_API_KEY:-}
-    volumes:
-      - ./logs:/app/logs
-    restart: unless-stopped
+      - SOLANA_NETWORK=${SOLANA_NETWORK:-devnet}
+      - MYTHOS_PROGRAM_ID=${MYTHOS_PROGRAM_ID:-FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM}
+      - HELIUS_API_KEY=${HELIUS_API_KEY:-}
+      - HELIUS_RPC_URL=${HELIUS_RPC_URL:-https://devnet.helius-rpc.com/?api-key=}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - SOLANA_DEMO_MODE=${SOLANA_DEMO_MODE:-true}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
     networks:
-      - lendora-network
+      - mythos-network
 
   # ============================================================================
-  # Frontend (Production Build)
+  # Mythos Frontend — Vite/React (production build)
   # ============================================================================
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: lendora-frontend
+    container_name: mythos-frontend
     ports:
       - "${FRONTEND_PORT:-80}:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      - lendora-network
-
-  # ============================================================================
-  # Ollama (Optional - for AI agents)
-  # ============================================================================
-  ollama:
-    image: ollama/ollama:latest
-    container_name: lendora-ollama
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    restart: unless-stopped
-    networks:
-      - lendora-network
-    profiles:
-      - with-ollama
+      - mythos-network
 
 volumes:
   ollama-data:
 
 networks:
-  lendora-network:
+  mythos-network:
     driver: bridge

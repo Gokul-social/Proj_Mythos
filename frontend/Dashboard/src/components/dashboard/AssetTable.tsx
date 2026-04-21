@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Coins } from "lucide-react";
 import { StablecoinLogo } from "@/lib/stablecoinLogos";
+import type { Stablecoin } from "@/components/dashboard/StablecoinSelector";
 
 interface Asset {
   id: string;
@@ -22,16 +23,16 @@ const mockAssets: Asset[] = [
   },
   {
     id: "2",
-    name: "Ethereum",
-    symbol: "ETH",
+    name: "Solana",
+    symbol: "SOL",
     apr: "5.2%",
     liquidity: "$8.7M",
     icon: "E",
   },
   {
     id: "3",
-    name: "PayPal USD",
-    symbol: "PYUSD",
+    name: "Dai Stablecoin",
+    symbol: "DAI",
     apr: "3.8%",
     liquidity: "$15.2M",
     icon: "D",
@@ -73,8 +74,8 @@ export const AssetTable = () => {
           >
             <div className="flex items-center gap-4 flex-1">
               <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center overflow-hidden">
-                {['USDT', 'USDC', 'PYUSD'].includes(asset.symbol) ? (
-                  <StablecoinLogo symbol={asset.symbol as any} size={40} />
+                {['USDT', 'USDC', 'DAI', 'TUSD', 'BUSD', 'USDD'].includes(asset.symbol) ? (
+                  <StablecoinLogo symbol={asset.symbol as Stablecoin} size={40} />
                 ) : (
                   <span className="text-xl">{asset.icon}</span>
                 )}
@@ -115,3 +116,4 @@ export const AssetTable = () => {
     </motion.div>
   );
 };
+

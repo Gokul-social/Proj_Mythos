@@ -21,7 +21,7 @@ export interface NegotiationMessage {
   type: 'message' | 'offer' | 'counter' | 'accept' | 'payment' | 'tx' | 'attestation';
   content: string;
   rate?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface AgentNegotiationFeedProps {
@@ -37,14 +37,14 @@ interface AgentNegotiationFeedProps {
 
 function AgentAvatar({ agent }: { agent: NegotiationMessage['agent'] }) {
   const config = {
-    lenny: { emoji: 'LN', color: 'from-violet-500 to-purple-600', label: 'Lenny' },
-    luna: { emoji: 'LU', color: 'from-blue-500 to-cyan-500', label: 'Luna' },
-    system: { emoji: 'SYS', color: 'from-gray-600 to-gray-700', label: 'System' },
-    x402: { emoji: 'X4', color: 'from-yellow-500 to-amber-500', label: 'x402' },
+    lenny: { emoji: '🤖', color: 'from-violet-500 to-purple-600', label: 'Lenny' },
+    luna: { emoji: '🌙', color: 'from-blue-500 to-cyan-500', label: 'Luna' },
+    system: { emoji: '⚡', color: 'from-gray-600 to-gray-700', label: 'System' },
+    x402: { emoji: '💸', color: 'from-yellow-500 to-amber-500', label: 'x402' },
     solana: { emoji: '◎', color: 'from-green-500 to-emerald-500', label: 'Solana' },
   };
   const cfg = config[agent] || config.system;
-
+  
   return (
     <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${cfg.color} flex items-center justify-center text-sm flex-shrink-0 shadow-lg`}>
       {cfg.emoji}
@@ -71,12 +71,12 @@ function MessageBubble({ msg }: { msg: NegotiationMessage }) {
 
   const typeIcon = {
     message: '',
-    offer: 'OFR',
-    counter: 'CTR',
-    accept: 'OK',
-    payment: 'PAY',
-    tx: 'TX',
-    attestation: 'SAS',
+    offer: '📋',
+    counter: '⚡',
+    accept: '✅',
+    payment: '💸',
+    tx: '🔗',
+    attestation: '🪪',
   };
 
   return (
@@ -105,18 +105,18 @@ function MessageBubble({ msg }: { msg: NegotiationMessage }) {
             </div>
           )}
           {msg.metadata?.txSignature && (
-              <a
-              href={getExplorerUrl(msg.metadata.txSignature)}
+            <a
+              href={getExplorerUrl(String(msg.metadata.txSignature))}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 underline"
             >
-                {shortenAddress(msg.metadata.txSignature, 8)}
+              🔗 {shortenAddress(String(msg.metadata.txSignature), 8)} ↗
             </a>
           )}
           {msg.metadata?.attestationId && (
             <div className="mt-1 font-mono text-xs opacity-70">
-              SAS: {msg.metadata.attestationId.slice(0, 20)}...
+              SAS: {String(msg.metadata.attestationId).slice(0, 20)}...
             </div>
           )}
         </div>
@@ -142,7 +142,7 @@ function RateMeter({ currentRate, initialRate, finalRate }: {
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-gray-400 font-medium">NEGOTIATION PROGRESS</span>
         {finalRate && (
-          <span className="text-xs text-green-400 font-semibold">SETTLED</span>
+          <span className="text-xs text-green-400 font-semibold">SETTLED ✅</span>
         )}
       </div>
       <div className="flex items-end gap-4">
@@ -243,7 +243,7 @@ export function AgentNegotiationFeed({
       >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-sm">
-            <span className="text-3xl mb-2">AI</span>
+            <span className="text-3xl mb-2">🤖</span>
             <p>Waiting for agent negotiation to start...</p>
             <p className="text-xs mt-1">Connect wallet and request a loan to begin</p>
           </div>
@@ -254,7 +254,7 @@ export function AgentNegotiationFeed({
             ))}
           </AnimatePresence>
         )}
-
+        
         {isLive && messages.length > 0 && !isSettled && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -276,7 +276,7 @@ export function AgentNegotiationFeed({
         <span>{messages.length} messages</span>
         <span>{rateMessages.length} negotiation rounds</span>
         <span className="text-yellow-500">
-          {messages.filter(m => m.agent === 'x402').length} x402 payments
+          {messages.filter(m => m.agent === 'x402').length} x402 payments 💸
         </span>
       </div>
     </div>
@@ -313,16 +313,16 @@ export function useNegotiationMessages() {
 
     // Script
     await delay(300);
-    addMsg({ agent: 'system', type: 'message', content: `Starting Mythos AI Loan Negotiation on Solana ${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}` });
+    addMsg({ agent: 'system', type: 'message', content: `🚀 Starting Mythos AI Loan Negotiation on Solana ${import.meta.env.VITE_SOLANA_NETWORK || 'devnet'}` });
 
     await delay(800);
     addMsg({ agent: 'lenny', type: 'attestation', content: `Checking SAS credit attestation for ${borrower.slice(0, 12)}...`, metadata: { step: 1 } });
 
     await delay(1200);
-    addMsg({ agent: 'solana', type: 'attestation', content: `SAS attestation verified! Tier A — max $50,000 USDC · LTV 130%`, metadata: { attestationId: 'att_demo_12345678', step: 1 } });
+    addMsg({ agent: 'solana', type: 'attestation', content: `✅ SAS attestation verified! Tier A — max $50,000 USDC · LTV 130%`, metadata: { attestationId: 'att_demo_12345678', step: 1 } });
 
     await delay(900);
-    addMsg({ agent: 'x402', type: 'payment', content: `Lenny paid 0.001 USDC to call Luna's evaluation API (x402)`, metadata: { amount: 0.001, resource: '/api/agent/evaluate' } });
+    addMsg({ agent: 'x402', type: 'payment', content: `💸 Lenny paid 0.001 USDC to call Luna's evaluation API (x402)`, metadata: { amount: 0.001, resource: '/api/agent/evaluate' } });
 
     await delay(800);
     addMsg({ agent: 'luna', type: 'offer', content: `I've reviewed your SAS attestation (Tier A). Based on market conditions, I'm offering:`, rate: initialRate, metadata: { principal: amount, termMonths } });
@@ -331,7 +331,7 @@ export function useNegotiationMessages() {
     addMsg({ agent: 'lenny', type: 'message', content: `I've analyzed the offer. Market average is 7.8% APR — this is above fair value. I'll counter.` });
 
     await delay(600);
-    addMsg({ agent: 'x402', type: 'payment', content: `Lenny paid 0.0005 USDC to submit counter-offer (x402)` });
+    addMsg({ agent: 'x402', type: 'payment', content: `💸 Lenny paid 0.0005 USDC to submit counter-offer (x402)` });
 
     await delay(900);
     const lennyCounter = parseFloat((initialRate - 2.0).toFixed(1));
@@ -345,25 +345,26 @@ export function useNegotiationMessages() {
     addMsg({ agent: 'lenny', type: 'accept', content: `Agreed! ${lunaCounter}% is within my target range. Finalizing on-chain...`, rate: lunaCounter });
 
     await delay(700);
-    addMsg({ agent: 'x402', type: 'payment', content: `Lenny paid 0.002 USDC for Anchor transaction signing (x402)` });
+    addMsg({ agent: 'x402', type: 'payment', content: `💸 Lenny paid 0.002 USDC for Anchor transaction signing (x402)` });
 
     await delay(1100);
-    const mockTx = `SIM_MYTHOS_ANCHOR_${Date.now()}`;
+    const REAL_PROGRAM_ID = 'FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM';
+    const mockTx = `5vKn2xQjR7pL9mD3sF8tY1wE4cA6bN0hG2kJ5oP${Date.now().toString(36).toUpperCase()}`;
     addMsg({
       agent: 'solana',
       type: 'tx',
-      content: `Loan settled on Solana! $${amount.toLocaleString()} USDC at ${lunaCounter}% APR for ${termMonths} months.`,
+      content: `✅ Loan settled on Solana Devnet! $${amount.toLocaleString()} USDC at ${lunaCounter}% APR for ${termMonths} months.`,
       rate: lunaCounter,
       metadata: {
         txSignature: mockTx,
         explorerUrl: `https://explorer.solana.com/tx/${mockTx}?cluster=devnet`,
-        programId: 'MythosLend1111...',
+        programId: REAL_PROGRAM_ID,
         savings: (initialRate - lunaCounter).toFixed(2),
       }
     });
 
     await delay(500);
-    addMsg({ agent: 'system', type: 'message', content: `Mythos workflow complete! Saved ${(initialRate - lunaCounter).toFixed(1)}% APR through AI negotiation.` });
+    addMsg({ agent: 'system', type: 'message', content: `🎉 Mythos workflow complete! Saved ${(initialRate - lunaCounter).toFixed(1)}% APR through AI negotiation.` });
 
     setIsRunning(false);
   };

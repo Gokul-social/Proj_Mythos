@@ -1,12 +1,5 @@
 """
-Mythos — Solana-Native Lender Agent (Luna)
-==========================================
-Luna is the autonomous AI lender agent that:
-  1. Reads borrower's SAS credit attestation
-  2. Prices the loan based on attestation tier + Jupiter collateral value
-  3. Negotiates with Lenny via x402-gated endpoints
-  4. Co-signs the final Solana Anchor transaction
-  5. Monitors loan health via Helius webhooks
+Mythos - Solana-Native Lender Agent (Luna)
 """
 
 import json
@@ -19,15 +12,14 @@ from dataclasses import dataclass
 from crewai import Agent, Task, LLM
 from crewai.tools import BaseTool
 
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-SOLANA_NETWORK = os.getenv("SOLANA_NETWORK", "devnet")
-LUNA_WALLET = os.getenv(
-    "LUNA_WALLET_ADDRESS",
-    "LunaLenderAgentXXXXXXXXXXXXXXXXXXXXXXXXX"
+from ..api.config import (
+    SOLANA_NETWORK,
+    LUNA_WALLET_ADDRESS as LUNA_WALLET,
+    MYTHOS_PROGRAM_ID as PROGRAM_ID,
+    GROQ_API_KEY,
+    OLLAMA_BASE_URL,
+    OPENAI_API_KEY
 )
-PROGRAM_ID = os.getenv("MYTHOS_PROGRAM_ID", "MythosLend1111111111111111111111111111111111")
 
 
 # ============================================================================
@@ -45,8 +37,7 @@ class VerifyBorrowerAttestationTool(BaseTool):
 
     def _run(self, borrower_pubkey: str) -> str:
         try:
-            sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../backend/api"))
-            from attestation import sas_client
+            from ..api.attestation import sas_client
 
             loop = asyncio.new_event_loop()
             att = loop.run_until_complete(
@@ -261,36 +252,22 @@ class MonitorLoanHealthTool(BaseTool):
 # ============================================================================
 
 def get_llm():
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key:
+    if GROQ_API_KEY:
         try:
-            return LLM(model="groq/llama-3.3-70b-versatile", api_key=groq_key, temperature=0.3)
+            return LLM(model="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY, temperature=0.3)
         except Exception:
             pass
     try:
         import requests
-        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        if requests.get(f"{ollama_url}/api/tags", timeout=2).status_code == 200:
-            return LLM(model="ollama/llama3", base_url=ollama_url, temperature=0.3)
+        if requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2).status_code == 200:
+            return LLM(model="ollama/llama3", base_url=OLLAMA_BASE_URL, temperature=0.3)
     except Exception:
         pass
-    return LLM(model="gpt-3.5-turbo", api_key=os.getenv("OPENAI_API_KEY", "sk-placeholder"), temperature=0.3)
+    return LLM(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY, temperature=0.3)
 
-
-# ============================================================================
-# Agent Creation
-# ============================================================================
 
 def create_solana_lender_agent() -> Agent:
-    """
-    Create Luna — the Solana-native autonomous lender agent.
-
-    Luna can:
-    - Verify borrower's SAS attestation
-    - Price loans based on risk tier + Jupiter collateral data
-    - Evaluate and counter borrower offers
-    - Monitor loan health via Helius
-    """
+    """Create Luna - the Solana-native lender agent."""
     return Agent(
         role="Autonomous DeFi Lender on Solana",
         goal=(

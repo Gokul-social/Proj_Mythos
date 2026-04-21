@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Simplified Wallet Connection for Wizard
  * Neutral, informational error messages
  */
@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/useWallet';
+import { getWalletState } from '@/lib/wallet/ethereum-wallet';
 import { Wallet, Check, Edit2, X } from 'lucide-react';
-
-type WalletName = string;
-const getWalletState = async () => ({ connected: false, address: null });
+import type { WalletName } from '@/lib/wallet/ethereum-wallet';
 
 interface WalletConnectionWizardProps {
     onConnect: (address: string) => void;
@@ -51,7 +50,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
     const handleRetry = async () => {
         if (connectionAttemptRef.current) {
             setRetryCount(prev => prev + 1);
-
+            
             // First check if already connected
             try {
                 const state = await getWalletState();
@@ -66,7 +65,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
             } catch (err) {
                 console.error('Error checking connection state:', err);
             }
-
+            
             // If not connected, try connecting again
             try {
                 await connect(connectionAttemptRef.current);
@@ -92,7 +91,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                 }
             } else {
                 // Not connected, show message
-                setLocalError('No connection found. Please click a wallet option to connect.');
+                setLocalError('No connection found. Please click the Phantom button to connect.');
             }
         } catch (err) {
             console.error('Check connection error:', err);
@@ -104,20 +103,20 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
         if (error && error.includes('pending') && !isConnecting && connectionAttemptRef.current) {
             let pollCount = 0;
             const maxPolls = 30; // Poll for up to 60 seconds (30 * 2s)
-
+            
             const pollInterval = setInterval(async () => {
                 pollCount++;
                 if (pollCount > maxPolls) {
                     clearInterval(pollInterval);
                     return;
                 }
-
+                
                 try {
                     const state = await getWalletState();
                     if (state && state.connected && state.address) {
                         console.log('[Wizard] Polling detected connection, updating...');
                         clearInterval(pollInterval);
-
+                        
                         // Connection was approved, trigger connect to update hook state
                         if (connectionAttemptRef.current) {
                             try {
@@ -139,11 +138,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
 
 
     const isValidAddress = (addr: string) => {
-        if (!addr) return false;
-        const trimmed = addr.trim();
-        const ethPattern = /^0x[a-fA-F0-9]{40}$/;
-        const solPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-        return ethPattern.test(trimmed) || solPattern.test(trimmed);
+        return addr && addr.startsWith('0x') && addr.length === 42;
     };
 
     // Auto-advance when wallet connects (only once)
@@ -155,11 +150,11 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
     }, [isConnected, address, onConnect]);
 
     const walletIcons: Record<string, string> = {
-        metamask: 'MM',
-        coinbase: 'CB',
-        walletconnect: 'WC',
-        trust: 'TR',
-        rainbow: 'RB',
+        phantom: '👻',
+        coinbase: 'ðŸ”µ',
+        walletconnect: 'ðŸ”—',
+        trust: 'ðŸ›¡ï¸',
+        rainbow: 'ðŸŒˆ',
     };
 
     return (
@@ -199,14 +194,14 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                                         disabled={isConnecting}
                                         className="justify-start"
                                     >
-                                        <span className="mr-2">{walletIcons[wallet.name] || 'W'}</span>
+                                        <span className="mr-2">{walletIcons[wallet.name] || 'ðŸ’³'}</span>
                                         {wallet.displayName}
                                     </Button>
                                 ))}
                         </div>
                         {installedWallets.filter(w => w.installed).length === 0 && (
                             <p className="text-sm text-muted-foreground mt-3">
-                                No compatible wallets detected. You can continue with a manual wallet address.
+                                No wallets detected. Install Phantom or another Solana wallet extension.
                             </p>
                         )}
                     </div>
@@ -226,7 +221,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                         {isManualMode && (
                             <div className="space-y-3">
                                 <Input
-                                    placeholder="Wallet address"
+                                    placeholder="0x..."
                                     value={manualAddress}
                                     onChange={(e) => setManualAddress(e.target.value)}
                                     className="font-mono text-sm"
@@ -243,7 +238,7 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                                     Continue
                                 </Button>
                                 <p className="text-xs text-muted-foreground">
-                                    Enter a wallet address to continue
+                                    Enter your Solana wallet address to continue
                                 </p>
                             </div>
                         )}
@@ -261,9 +256,10 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
                                     <div className="space-y-2">
                                         <p className="text-xs font-medium text-foreground">Steps to connect:</p>
                                         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside ml-2">
-                                            <li>Open your wallet extension from the browser toolbar</li>
+                                            <li>Look for the Phantom extension icon in your browser toolbar</li>
+                                            <li>Click the Phantom icon to open the extension</li>
                                             <li>Approve the connection request if you see one</li>
-                                            <li>Make sure your wallet is unlocked</li>
+                                            <li>Make sure Phantom is unlocked</li>
                                             <li>Click "Check Connection" below after approving</li>
                                         </ol>
                                     </div>
@@ -312,3 +308,6 @@ export function WalletConnectionWizard({ onConnect, role }: WalletConnectionWiza
         </div>
     );
 }
+
+
+

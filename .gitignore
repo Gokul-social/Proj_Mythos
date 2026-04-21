@@ -1,41 +1,51 @@
 # Dependencies
 node_modules/
+frontend/Dashboard/node_modules/
 
-# Environment files
+# Environment files - never commit secrets
 .env
+.env.*
 .env.local
 .env.example
 .env.*.local
+frontend/Dashboard/.env
+frontend/Dashboard/.env.*
 
 # Rust / Anchor build artifacts
+target/
 **/target/
 *.so
 *.rlib
+target_verify/
+target/deploy/*.json
 
 # Cargo lock files in subdirectories (keep root Cargo.lock)
 programs/Cargo.lock
 programs/mythos/Cargo.lock
 
-# Python cache
+# Frontend build artifacts
+dist/
+frontend/Dashboard/dist/
+frontend/Dashboard/package-lock.json
+*.tsbuildinfo
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.venv/
+venv/
 
-# TypeScript build info
-*.tsbuildinfo
-
-# IDE / Editor
+# IDE / Editor / OS
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
 # Logs
 *.log
 npm-debug.log*
-
-# OS files
-Thumbs.db

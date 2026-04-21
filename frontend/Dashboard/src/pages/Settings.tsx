@@ -107,22 +107,19 @@ export default function Settings() {
                             <SelectContent>
                                 <SelectItem value="USDC">USDC</SelectItem>
                                 <SelectItem value="USDT">USDT</SelectItem>
-                                <SelectItem value="PYUSD">PYUSD</SelectItem>
+                                <SelectItem value="DAI">DAI</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-foreground">Default Network</Label>
-                        <Select defaultValue={network || 'arbitrum-sepolia'}>
+                        <Select defaultValue="devnet">
                             <SelectTrigger className="w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="solana">Solana Mainnet</SelectItem>
-                                <SelectItem value="arbitrum">Arbitrum One</SelectItem>
-                                <SelectItem value="arbitrum-sepolia">Arbitrum Sepolia</SelectItem>
-                                <SelectItem value="optimism">Optimism</SelectItem>
-                                <SelectItem value="base">Base</SelectItem>
+                                <SelectItem value="devnet">Solana Devnet</SelectItem>
+                                <SelectItem value="mainnet-beta">Solana Mainnet</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

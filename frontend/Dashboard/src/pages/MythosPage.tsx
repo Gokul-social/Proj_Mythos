@@ -15,6 +15,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AgentNegotiationFeed, useNegotiationMessages, type NegotiationMessage } from '@/components/AgentNegotiationFeed';
 import { X402PaymentVisualizer, generateDemoPayment, type X402PaymentEvent } from '@/components/X402PaymentVisualizer';
 import { WalletButton, useWallet } from '@/components/wallet/SolanaWalletProvider';
+import { SASCreditPanel } from '@/components/SASCreditPanel';
+import { JupiterPriceBanner } from '@/components/JupiterPriceBanner';
 import {
   getJupiterPrice,
   getExplorerUrl,
@@ -25,6 +27,54 @@ import {
 } from '@/lib/solana';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+// ============================================================================
+// useNetworkStats — polls /api/solana/network every 10s
+// Falls back to demo values if backend unreachable
+// ============================================================================
+
+interface NetworkStats {
+  current_slot: number;
+  sol_price_usd: number;
+  tps: number;
+  demo_mode: boolean;
+  rpc: string;
+}
+
+function useNetworkStats(): NetworkStats {
+  const [stats, setStats] = React.useState<NetworkStats>({
+    current_slot: 0,
+    sol_price_usd: 180.5,
+    tps: 4000,
+    demo_mode: true,
+    rpc: 'demo',
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/solana/network`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setStats({
+            current_slot: data.current_slot ?? 0,
+            sol_price_usd: data.sol_price_usd ?? 180.5,
+            tps: data.tps ?? 4000,
+            demo_mode: data.demo_mode ?? true,
+            rpc: data.rpc ?? 'demo',
+          });
+        }
+      } catch { /* keep previous values */ }
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 10_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return stats;
+}
 
 // ============================================================================
 // Header
@@ -59,11 +109,8 @@ function MythosHeader() {
 
 function HeroSection({ onStart }: { onStart: () => void }) {
   const wallet = useWallet();
-  const [solPrice, setSolPrice] = useState<number>(180.5);
-
-  useEffect(() => {
-    getJupiterPrice('SOL').then(p => p && setSolPrice(p.priceUsd));
-  }, []);
+  const net = useNetworkStats();
+  const solPrice = net.sol_price_usd;
 
   return (
     <div className="text-center max-w-4xl mx-auto py-16 px-6">
@@ -73,7 +120,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         animate={{ opacity: 1, y: 0 }}
         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300 mb-6"
       >
-        <span className="animate-pulse">SOL</span>
+        <span className="animate-pulse">◎</span>
         Built for Solana Hackathon 2026
         <span className="px-2 py-0.5 bg-purple-500/20 rounded-full text-purple-200 text-[10px] font-semibold">x402 · SAS · Helius · Jupiter</span>
       </motion.div>
@@ -99,11 +146,10 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         transition={{ delay: 0.2 }}
         className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed"
       >
-        Two AI agents negotiate your loan terms on-chain. Lenny finds the best rate,
-        Luna prices the risk — both pay each other in USDC via x402 to get the deal done.
+        Two AI agents negotiate your loan on Solana in real-time — paying each other in USDC via x402 — zero human clicks required.
       </motion.p>
 
-      {/* Stats */}
+      {/* Stats — live from /api/solana/network */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,12 +157,23 @@ function HeroSection({ onStart }: { onStart: () => void }) {
         className="flex flex-wrap justify-center gap-6 mb-10 text-sm"
       >
         {[
-          { label: 'SOL Price', value: `$${solPrice.toFixed(2)}`, icon: 'SOL', color: 'text-green-400' },
-          { label: 'TPS', value: '~4,000', icon: 'TPS', color: 'text-yellow-400' },
-          { label: 'Settlement', value: '<1s', icon: 'SET', color: 'text-blue-400' },
-          { label: 'Protocol', value: 'x402', icon: 'PAY', color: 'text-purple-400' },
+          { label: 'SOL Price', value: `$${solPrice.toFixed(2)}`, icon: '◎', color: 'text-green-400' },
+          {
+            label: 'TPS',
+            value: net.tps > 0 ? `~${(net.tps / 1000).toFixed(1)}k` : '~4.0k',
+            icon: '⚡',
+            color: 'text-yellow-400',
+          },
+          {
+            label: net.demo_mode ? 'Slot (demo)' : 'Slot (live)',
+            value: net.current_slot > 0 ? net.current_slot.toLocaleString() : '...',
+            icon: '📡',
+            color: net.demo_mode ? 'text-gray-500' : 'text-cyan-400',
+          },
+          { label: 'Protocol', value: 'x402', icon: '💸', color: 'text-purple-400' },
         ].map(stat => (
           <div key={stat.label} className="flex items-center gap-2 text-gray-300">
+
             <span className={stat.color}>{stat.icon}</span>
             <span className="font-bold">{stat.value}</span>
             <span className="text-gray-500">{stat.label}</span>
@@ -137,12 +194,19 @@ function HeroSection({ onStart }: { onStart: () => void }) {
             id="start-loan-btn"
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold text-lg shadow-2xl shadow-purple-500/30 transition-all hover:scale-105 active:scale-95"
           >
-            Start AI Loan Negotiation
+            🤖 Start AI Loan Negotiation
           </button>
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <WalletButton />
-            <p className="text-xs text-gray-500">Connect wallet to get started</p>
+          <div className="flex flex-col items-center gap-3">
+            {/* One-Click Demo Mode — no wallet needed */}
+            <button
+              onClick={onStart}
+              id="demo-mode-btn"
+              className="px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold text-lg shadow-2xl shadow-purple-500/30 transition-all hover:scale-105 active:scale-95"
+            >
+              ⚡ One-Click Demo — No Wallet Needed
+            </button>
+            <p className="text-xs text-gray-500">Or <span className="inline-block"><WalletButton /></span> to use your own wallet</p>
           </div>
         )}
         <a
@@ -152,7 +216,7 @@ function HeroSection({ onStart }: { onStart: () => void }) {
           className="px-8 py-4 rounded-xl border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-white font-semibold transition-all"
           id="view-program-btn"
         >
-          View Anchor Program
+          ◎ View Anchor Program
         </a>
       </motion.div>
     </div>
@@ -185,7 +249,7 @@ function LoanRequestForm({
   return (
     <div className="bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 space-y-5">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">CFG</span>
+        <span className="text-xl">📋</span>
         <h2 className="text-white font-bold">Loan Parameters</h2>
         <span className="ml-auto text-xs text-purple-400 flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
@@ -297,7 +361,7 @@ function LoanRequestForm({
             Negotiating on Solana...
           </span>
         ) : wallet.connected ? (
-          'Start AI Negotiation'
+          '🤖 Start AI Negotiation'
         ) : (
           'Connect Wallet First'
         )}
@@ -306,7 +370,7 @@ function LoanRequestForm({
   );
 }
 
-// ============================================================================
+// ============================================================================  
 // Helius Live Feed (bottom ticker)
 // ============================================================================
 
@@ -327,9 +391,9 @@ function HeliusFeedTicker({ events }: { events: HeliusLoanEvent[] }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur border-t border-gray-800 py-2 px-4">
       <div className="max-w-7xl mx-auto flex items-center gap-4 text-xs text-gray-400">
-        <span className="text-green-400 font-medium whitespace-nowrap flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          Helius Live
+        <span className="text-yellow-500 font-medium whitespace-nowrap flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+          Helius Feed (demo)
         </span>
         <AnimatePresence mode="wait">
           <motion.div
@@ -343,7 +407,7 @@ function HeliusFeedTicker({ events }: { events: HeliusLoanEvent[] }) {
             {event.txSignature && (
               <a href={getExplorerUrl(event.txSignature)} target="_blank" rel="noopener noreferrer"
                 className="text-purple-400 hover:text-purple-300 whitespace-nowrap">
-                {shortenAddress(event.txSignature)}
+                {shortenAddress(event.txSignature)} ↗
               </a>
             )}
           </motion.div>
@@ -366,32 +430,37 @@ export default function MythosPage() {
   const [loanParams, setLoanParams] = useState<LoanParams>({ amount: 1000, termMonths: 12, collateral: 'SOL' });
   const [view, setView] = useState<'hero' | 'demo'>('hero');
 
-  // Simulate Helius event stream
+  // Demo event stream: these are NOT real on-chain events.
+  // They simulate what a real Helius webhook would emit after a live negotiate+settle.
+  // To receive real events: set HELIUS_API_KEY and use Helius webhook → POST /api/helius/event.
   useEffect(() => {
+    const baseSlot = 456903617;
     const events: HeliusLoanEvent[] = [
-      { eventType: 'jupiter_price_check', message: 'Jupiter: SOL/USD = $180.50 (+2.3%)', slot: 350012345, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'attestation_verified', message: 'SAS attestation verified for LennyBorrower...', slot: 350012346, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'payment_x402', message: 'x402: 0.001 USDC paid for /api/agent/evaluate', slot: 350012347, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'negotiation_round', message: 'Lenny: counter 7.5% → Luna: counter 8.0%', slot: 350012348, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
-      { eventType: 'loan_accepted', message: 'Mythos Anchor: Loan #42 settled at 8.0% APR', slot: 350012349, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'jupiter_price_check', message: '◎ Jupiter: SOL/USD refreshed via Price API v6', slot: baseSlot + 1, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'attestation_verified', message: '🪪 SAS: Credit attestation PDA verified — Tier A', slot: baseSlot + 2, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'payment_x402', message: '💸 x402: 0.001 USDC paid → /api/agent/evaluate', slot: baseSlot + 3, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'negotiation_round', message: '🤖 Lenny: 7.5% → 🌙 Luna: counter 8.0% APR', slot: baseSlot + 4, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'payment_x402', message: '💸 x402: 0.0005 USDC paid → /api/agent/negotiate', slot: baseSlot + 5, timestamp: new Date().toISOString(), network: SOLANA_NETWORK },
+      { eventType: 'loan_accepted', message: '✅ Anchor: initialize_loan() — 1000 USDC @ 7.75% settled', slot: baseSlot + 6, timestamp: new Date().toISOString(), network: SOLANA_NETWORK, txSignature: '5vKn2...' },
     ];
+    let slotCounter = baseSlot + 7;
     const interval = setInterval(() => {
       setHeliusEvents(prev => {
         const newEvent = {
           ...events[Math.floor(Math.random() * events.length)],
-          slot: 350012348 + prev.length,
+          slot: slotCounter++,
           timestamp: new Date().toISOString(),
         };
         return [...prev.slice(-50), newEvent];
       });
     }, 4000);
-    // Prime with initial events
     setHeliusEvents(events);
     return () => clearInterval(interval);
   }, []);
 
-  const handleStartNegotiation = useCallback(async () => {
-    if (!wallet.connected || !wallet.publicKey) return;
+  const handleStartNegotiation = useCallback(async (demoMode = false) => {
+    // Demo mode uses a fake public key so no wallet needed
+    const pubkey = wallet.connected && wallet.publicKey ? wallet.publicKey : 'DemoWallet11111111111111111111111111111111';
     setView('demo');
     clearMessages();
     setX402Payments([]);
@@ -402,7 +471,7 @@ export default function MythosPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          borrower_address: wallet.publicKey,
+          borrower_address: pubkey,
           credit_score: 720,
           principal: loanParams.amount,
           interest_rate: 9.5,
@@ -415,7 +484,7 @@ export default function MythosPage() {
 
     // Start frontend negotiation animation
     await startNegotiation({
-      borrower: wallet.publicKey,
+      borrower: pubkey,
       amount: loanParams.amount,
       initialRate: 9.5,
       termMonths: loanParams.termMonths,
@@ -451,28 +520,28 @@ export default function MythosPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <HeroSection onStart={() => { if (wallet.connected) setView('demo'); }} />
+              <HeroSection onStart={() => handleStartNegotiation(false)} />
 
               {/* Feature cards */}
               <div className="max-w-6xl mx-auto mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
                 {[
                   {
-                    icon: 'AI', title: 'AI Negotiation',
+                    icon: '🤖', title: 'AI Negotiation',
                     desc: 'Lenny & Luna negotiate your interest rate autonomously using CrewAI + Llama 3',
                     tag: 'CrewAI'
                   },
                   {
-                    icon: 'PAY', title: 'x402 Payments',
+                    icon: '💸', title: 'x402 Payments',
                     desc: 'Agents pay each other micro-fees in USDC on Solana for every AI service call',
                     tag: 'HTTP 402'
                   },
                   {
-                    icon: 'SAS', title: 'SAS Attestations',
+                    icon: '🪪', title: 'SAS Attestations',
                     desc: 'Credit scores verified on-chain via Solana Attestation Service — no privacy leaks',
                     tag: 'Solana SAS'
                   },
                   {
-                    icon: 'SOL', title: 'Anchor Programs',
+                    icon: '◎', title: 'Anchor Programs',
                     desc: 'Loans settled in sub-second via Anchor smart contracts on Solana Devnet',
                     tag: 'Anchor'
                   },
@@ -526,20 +595,25 @@ export default function MythosPage() {
                   <LoanRequestForm
                     params={loanParams}
                     onChange={p => setLoanParams(prev => ({ ...prev, ...p }))}
-                    onSubmit={handleStartNegotiation}
+                    onSubmit={() => handleStartNegotiation(false)}
                     isLoading={isRunning}
                   />
 
+                  {/* SAS Credit Panel */}
+                  <div className="mt-4">
+                    <SASCreditPanel walletAddress={wallet.connected && wallet.publicKey ? wallet.publicKey : 'DemoWallet11111111111111111111111111111111'} />
+                  </div>
+
                   {/* Network info */}
                   <div className="mt-4 bg-gray-900/60 rounded-2xl border border-gray-700/50 p-4 text-xs space-y-2">
-                    <div className="font-medium text-gray-300 mb-2">Network Info</div>
+                    <div className="font-medium text-gray-300 mb-2">🔗 Network Info</div>
                     <div className="flex justify-between text-gray-500">
                       <span>Network</span><span className="text-green-400 capitalize">{SOLANA_NETWORK}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
                       <span>Program</span>
                       <a href={getExplorerUrl(MYTHOS_PROGRAM_ID, 'address')} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
-                        {MYTHOS_PROGRAM_ID.slice(0, 12)}...
+                        {MYTHOS_PROGRAM_ID.slice(0, 12)}... ↗
                       </a>
                     </div>
                     <div className="flex justify-between text-gray-500">
