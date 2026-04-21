@@ -348,7 +348,7 @@ export function useNegotiationMessages() {
     addMsg({ agent: 'x402', type: 'payment', content: `💸 Lenny paid 0.002 USDC for Anchor transaction signing (x402)` });
 
     await delay(1100);
-    const REAL_PROGRAM_ID = 'FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM';
+    const REAL_PROGRAM_ID = '9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr';
     const mockTx = `5vKn2xQjR7pL9mD3sF8tY1wE4cA6bN0hG2kJ5oP${Date.now().toString(36).toUpperCase()}`;
     addMsg({
       agent: 'solana',

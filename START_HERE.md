@@ -6,7 +6,7 @@
 
 ## What's Already Done
 
-- Anchor program deployed to Devnet: `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM`
+- Anchor program deployed to Devnet: `9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr`
 - Frontend (Vite + React + Solana wallet adapter)
 - Backend (FastAPI + Groq LLM + Helius RPC + Jupiter price feed)
 
@@ -100,7 +100,7 @@ cargo-build-sbf --manifest-path programs/mythos/Cargo.toml
 
 # Deploy
 solana program deploy target/deploy/mythos.so \
-  --program-id FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM \
+  --program-id 9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr \
   --url devnet
 ```
 
@@ -108,6 +108,6 @@ solana program deploy target/deploy/mythos.so \
 
 ## Verify on Solana Explorer
 
-Program: [FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM](https://explorer.solana.com/address/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet)
+Program: [9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr](https://explorer.solana.com/address/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet)
 
 Deploy TX: [3twz9fk...](https://explorer.solana.com/tx/3twz9fkqZWktXGXukqGZqrwJLpY41A8iLmjyPN3TwWP4J4fobtUYNZPbshxkS6cdDqCAAT8t3xVFE8zw3y5TBrig?cluster=devnet)

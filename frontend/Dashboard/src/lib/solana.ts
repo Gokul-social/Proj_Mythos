@@ -16,7 +16,7 @@ export const SOLANA_NETWORK = (import.meta.env.VITE_SOLANA_NETWORK || 'devnet') 
 export const HELIUS_API_KEY = import.meta.env.VITE_HELIUS_API_KEY || 'demo';
 export const MYTHOS_PROGRAM_ID = import.meta.env.VITE_PROGRAM_ID
   || import.meta.env.VITE_MYTHOS_PROGRAM_ID
-  || 'FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM';
+  || '9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr';
 export const USDC_MINT_DEVNET = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 export const SOL_MINT = 'So11111111111111111111111111111111111111112';
 

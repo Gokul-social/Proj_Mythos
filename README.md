@@ -27,7 +27,7 @@
 |---|---|
 | **Live App** | [mythos-solana.vercel.app](https://mythos-solana.vercel.app) *(deploy with `vercel --prod`)* |
 | **API Docs** | [mythos-api.railway.app/docs](https://mythos-api.railway.app/docs) *(deploy with `railway up`)* |
-| **Program** | [Solscan - FGG836...](https://solscan.io/account/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) |
+| **Program** | [Solscan - FGG836...](https://solscan.io/account/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) |
 
 **One-liner - trigger full AI agent negotiation:**
 ```bash
@@ -47,7 +47,7 @@ curl -X POST https://mythos-api.railway.app/api/solana/workflow/start \
 
 | Feature | Evidence |
 |---|---|
-| **Anchor program deployed** | [`FGG8363...`](https://explorer.solana.com/address/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) - BPFLoaderUpgradeable, executable on devnet |
+| **Anchor program deployed** | [`FGG8363...`](https://explorer.solana.com/address/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) - BPFLoaderUpgradeable, executable on devnet |
 | **Deploy transaction** | [`3twz9fk...`](https://explorer.solana.com/tx/3twz9fkqZWktXGXukqGZqrwJLpY41A8iLmjyPN3TwWP4J4fobtUYNZPbshxkS6cdDqCAAT8t3xVFE8zw3y5TBrig?cluster=devnet) |
 | **All 5 Anchor instructions** | `initialize_loan`, `accept_loan`, `repay_loan`, `liquidate`, `update_attestation` - compiled, deployed |
 | **Jupiter SOL price** | `GET /api/solana/price/SOL` -> live Jupiter Price API v6, no key needed |
@@ -108,7 +108,7 @@ Then:
 3. Watch Lenny and Luna negotiate from 9.5% to ~7.5% APR in real-time
 4. Check the Jupiter price banner (live SOL/USD)
 5. Check the Helius activity feed (real Devnet slot numbers)
-6. Verify the program: paste FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM into Solana Explorer -> confirms executable, BPFLoader deployed
+6. Verify the program: paste 9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr into Solana Explorer -> confirms executable, BPFLoader deployed
 
 ---
 
@@ -346,13 +346,13 @@ Mythos is built on a modern stack:
 
 | | |
 |---|---|
-| **Program ID** | `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM` |
+| **Program ID** | `9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr` |
 | **Network** | Solana **Devnet** |
 | **Deploy Wallet** | `61m3ESHMhzDygAUWkSyXTCBr6Jy9gSnSF3Dqm6fxhg6s` |
 | **Deploy TX** | [`3twz9fk...`](https://explorer.solana.com/tx/3twz9fkqZWktXGXukqGZqrwJLpY41A8iLmjyPN3TwWP4J4fobtUYNZPbshxkS6cdDqCAAT8t3xVFE8zw3y5TBrig?cluster=devnet) |
 | **Deployed Slot** | `456903617` |
-| **Solscan** | [View Program](https://solscan.io/account/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) |
-| **Explorer** | [View Program](https://explorer.solana.com/address/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) |
+| **Solscan** | [View Program](https://solscan.io/account/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) |
+| **Explorer** | [View Program](https://explorer.solana.com/address/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) |
 | **Toolchain** | Rust 1.95 stable + cargo-build-sbf (Agave 3.1.13) |
 
 ### Redeploy from Source
@@ -368,7 +368,7 @@ solana program deploy target/deploy/mythos.so \
   --url devnet
 
 # 3. Verify
-solana program show FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM --url devnet
+solana program show 9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr --url devnet
 ```
 
 ---
@@ -378,7 +378,7 @@ solana program show FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM --url devnet
 ```env
 # Solana (live on Devnet)
 SOLANA_NETWORK=devnet
-MYTHOS_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
+MYTHOS_PROGRAM_ID=9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr
 TREASURY_WALLET=61m3ESHMhzDygAUWkSyXTCBr6Jy9gSnSF3Dqm6fxhg6s
 USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
 
@@ -389,7 +389,7 @@ GROQ_API_KEY=your_key        # https://console.groq.com
 # Frontend
 VITE_API_URL=http://localhost:8000
 VITE_SOLANA_NETWORK=devnet
-VITE_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
+VITE_PROGRAM_ID=9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr
 ```
 
 ---
@@ -415,7 +415,7 @@ VITE_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
 
 Built for the Solana Hackathon 2026
 
-**[Program on Explorer](https://explorer.solana.com/address/FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM?cluster=devnet) | [Deploy TX](https://explorer.solana.com/tx/3twz9fkqZWktXGXukqGZqrwJLpY41A8iLmjyPN3TwWP4J4fobtUYNZPbshxkS6cdDqCAAT8t3xVFE8zw3y5TBrig?cluster=devnet)**
+**[Program on Explorer](https://explorer.solana.com/address/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) | [Deploy TX](https://explorer.solana.com/tx/3twz9fkqZWktXGXukqGZqrwJLpY41A8iLmjyPN3TwWP4J4fobtUYNZPbshxkS6cdDqCAAT8t3xVFE8zw3y5TBrig?cluster=devnet)**
 
 **[Back to Top](#mythos)**
 

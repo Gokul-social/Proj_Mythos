@@ -45,7 +45,7 @@ Then push to GitHub and connect the repo to Vercel:
    VITE_API_URL=https://your-railway-url.up.railway.app
    VITE_SOLANA_NETWORK=devnet
    VITE_HELIUS_API_KEY=your_helius_key
-   VITE_MYTHOS_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
+   VITE_MYTHOS_PROGRAM_ID=9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr
    VITE_USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
    ```
 7. Deploy -> get your Vercel URL
@@ -62,7 +62,7 @@ Then push to GitHub and connect the repo to Vercel:
    HELIUS_API_KEY=your_helius_key
    GROQ_API_KEY=your_groq_key
    SOLANA_NETWORK=devnet
-   MYTHOS_PROGRAM_ID=FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM
+   MYTHOS_PROGRAM_ID=9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr
    USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
    SOLANA_DEMO_MODE=true
    PORT=8000
@@ -77,7 +77,7 @@ Then push to GitHub and connect the repo to Vercel:
 ```bash
 # Backend
 curl https://your-railway-url.up.railway.app/health
-# -> {"status":"ok","network":"devnet","program":"FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"}
+# -> {"status":"ok","network":"devnet","program":"9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"}
 
 # Price feed
 curl https://your-railway-url.up.railway.app/api/solana/price/SOL
@@ -88,7 +88,7 @@ curl https://your-railway-url.up.railway.app/api/solana/price/SOL
 
 ## Anchor Program (already deployed on Devnet)
 
-Program ID: `FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM`
+Program ID: `9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr`
 
 To redeploy after code changes:
 
@@ -96,7 +96,7 @@ To redeploy after code changes:
 $env:CARGO_TARGET_DIR = "D:\DevTools\cargo-target"   # Windows
 cargo-build-sbf --manifest-path programs/mythos/Cargo.toml
 solana program deploy target/deploy/mythos.so \
-  --program-id FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM \
+  --program-id 9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr \
   --url devnet \
   --keypair ~/.config/solana/id.json
 ```

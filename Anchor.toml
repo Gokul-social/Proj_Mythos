@@ -3,10 +3,10 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [programs.localnet]
-mythos = "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM"
+mythos = "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr"
 
 [registry]
 url = "https://api.apr.dev"

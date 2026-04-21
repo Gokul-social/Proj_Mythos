@@ -8,7 +8,7 @@ VERSION = "3.0.0"
 
 # Solana
 SOLANA_NETWORK = os.getenv("SOLANA_NETWORK", "devnet")
-MYTHOS_PROGRAM_ID = os.getenv("MYTHOS_PROGRAM_ID", "FGG8363rUtdVernzHtXr4AD9PS9m4BezgAN8MJKcybpM")
+MYTHOS_PROGRAM_ID = os.getenv("MYTHOS_PROGRAM_ID", "9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr")
 HELIUS_API_KEY = os.getenv("HELIUS_API_KEY", "demo")
 SOLANA_DEMO_MODE = os.getenv("SOLANA_DEMO_MODE", "true").lower() == "true"
 X402_DEMO_MODE = os.getenv("X402_DEMO_MODE", "true").lower() == "true"
