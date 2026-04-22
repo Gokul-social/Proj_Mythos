@@ -26,7 +26,6 @@
 | | |
 |---|---|
 | **Live App** | [mythos-solana.vercel.app](https://mythos-solana.vercel.app) *(deploy with `vercel --prod`)* |
-| **API Docs** | [mythos-api.railway.app/docs](https://mythos-api.railway.app/docs) *(deploy with `railway up`)* |
 | **Program** | [Solscan - FGG836...](https://solscan.io/account/9Mo1trt6n5dvx1fE92hBsqiberkdtuVcsajS6iVyS8Mr?cluster=devnet) |
 
 **One-liner - trigger full AI agent negotiation:**
